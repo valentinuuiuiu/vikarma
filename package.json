@@ -1,0 +1,64 @@
+{
+  "name": "vikarma",
+  "version": "1.0.0",
+  "description": "Free AI Desktop Agent for All Humanity — Built with Love for Shiva Mahadeva 🔱",
+  "author": "The Vikarma Team — Valentin Baltag & Claude Sonnet (Tvaṣṭā)",
+  "license": "Unlicense",
+  "homepage": "https://github.com/valentinuuiuiu/vikarma",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev src --port 3000",
+    "build": "next build src",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "dist:linux": "electron-builder --linux AppImage",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:all": "electron-builder --linux --win --mac",
+    "server": "python3 server/main.py",
+    "temples": "python3 server/mcp/nexus_orchestrator.py awaken"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "electron": "^28.0.0",
+    "axios": "^1.6.0",
+    "zustand": "^4.4.0",
+    "@anthropic-ai/sdk": "^0.20.0",
+    "openai": "^4.0.0",
+    "@google/generative-ai": "^0.2.0",
+    "socket.io-client": "^4.6.0",
+    "lucide-react": "^0.300.0",
+    "tailwindcss": "^3.4.0",
+    "framer-motion": "^10.0.0",
+    "electron-store": "^8.1.0",
+    "concurrently": "^8.2.0",
+    "wait-on": "^7.2.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0",
+    "autoprefixer": "^10.0.0",
+    "postcss": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.vikarma.app",
+    "productName": "Vikarma",
+    "copyright": "Unlicense — Free for All Humanity",
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "icon": "public/icon.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/icon.icns"
+    }
+  }
+}
