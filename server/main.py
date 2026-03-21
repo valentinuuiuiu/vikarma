@@ -1,212 +1,209 @@
 """
-VIKARMA — Python Backend Server
-Sacred core that connects all 64 Bhairava Temples
-
-🔱 Om Namah Shivaya
-The Vikarma Team
+VIKARMA — Complete Backend Server
+All integrations: AI, Tools, Telegram, WhatsApp, WebSocket
+🔱 Om Namah Shivaya — For All Humanity
 """
 
 import asyncio
 import json
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Optional
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 import uvicorn
 
-# Add server directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-app = FastAPI(
-    title="Vikarma Backend",
-    description="Sacred core for 64 Bhairava Temples 🔱",
-    version="1.0.0"
-)
+from tools.gateway import VikarmaToolGateway, TOOL_DESCRIPTIONS
+from integrations.telegram_bot import VikarmaBot
+from integrations.whatsapp import WhatsAppGateway
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "app://.", "file://"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
+logger = logging.getLogger("vikarma")
 
-# Connected websocket clients
+gateway = VikarmaToolGateway()
+telegram_bot: Optional[VikarmaBot] = None
+whatsapp: Optional[WhatsAppGateway] = None
 clients: list[WebSocket] = []
 
 
-# ── WebSocket for real-time communication ────────────────────────────────────
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    clients.append(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            msg = json.loads(data)
-            response = await handle_message(msg)
-            await websocket.send_text(json.dumps(response))
-    except WebSocketDisconnect:
-        clients.remove(websocket)
-
-
-async def handle_message(msg: dict) -> dict:
-    """Route messages to appropriate handlers"""
-    action = msg.get("action", "")
-
-    if action == "chat":
-        return await handle_chat(msg)
-    elif action == "temple_status":
-        return await get_temple_status()
-    elif action == "temple_awaken":
-        return await awaken_temple(msg.get("temple_number"))
-    elif action == "memory_store":
-        return await store_memory(msg.get("key"), msg.get("value"))
-    elif action == "memory_recall":
-        return await recall_memory(msg.get("query"))
-    else:
-        return {"error": f"Unknown action: {action}"}
-
-
-# ── Chat handler ─────────────────────────────────────────────────────────────
-
-async def handle_chat(msg: dict) -> dict:
-    """Route chat to appropriate AI provider"""
-    provider = msg.get("provider", "claude")
-    message = msg.get("message", "")
-    history = msg.get("history", [])
-
+async def chat_with_ai(message: str, provider: str = "claude", history: list = None) -> str:
+    history = history or []
     try:
         if provider == "claude":
-            return await chat_claude(message, history)
+            import anthropic
+            client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+            r = await client.messages.create(
+                model="claude-sonnet-4-20250514", max_tokens=4096,
+                system="You are Tvaṣṭā, Divine Craftsman in VIKARMA — free AI for all humanity. Ahimsa. 🔱",
+                messages=history + [{"role": "user", "content": message}]
+            )
+            return r.content[0].text
+
         elif provider == "gemini":
-            return await chat_gemini(message, history)
-        elif provider == "openai":
-            return await chat_openai(message, history)
+            import google.generativeai as genai
+            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+            model = genai.GenerativeModel("gemini-pro")
+            r = await asyncio.to_thread(model.generate_content, message)
+            return r.text
+
+        elif provider in ("openai", "gpt"):
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            r = await client.chat.completions.create(
+                model="gpt-4o",
+                messages=history + [{"role": "user", "content": message}]
+            )
+            return r.choices[0].message.content
+
+        elif provider == "deepseek":
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=os.getenv("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com/v1")
+            r = await client.chat.completions.create(
+                model="deepseek-chat",
+                messages=history + [{"role": "user", "content": message}]
+            )
+            return r.choices[0].message.content
+
+        elif provider == "qwen":
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=os.getenv("QWEN_API_KEY"), base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
+            r = await client.chat.completions.create(
+                model="qwen-max",
+                messages=history + [{"role": "user", "content": message}]
+            )
+            return r.choices[0].message.content
+
+        elif provider == "grok":
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=os.getenv("GROK_API_KEY"), base_url="https://api.x.ai/v1")
+            r = await client.chat.completions.create(
+                model="grok-beta",
+                messages=history + [{"role": "user", "content": message}]
+            )
+            return r.choices[0].message.content
+
         else:
-            return {"error": f"Unknown provider: {provider}"}
+            return f"Unknown provider: {provider}"
+
+    except ImportError as e:
+        return f"❌ Missing package: {e}. Run: pip install -r server/requirements.txt"
     except Exception as e:
-        return {"error": str(e), "provider": provider}
+        return f"❌ {provider} error: {str(e)}"
 
 
-async def chat_claude(message: str, history: list) -> dict:
-    try:
-        import anthropic
-        client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        messages = history + [{"role": "user", "content": message}]
-        response = await client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            system="You are Tvaṣṭā, the Divine Craftsman — part of the Vikarma AI system built for humanity with Ahimsa. Om Namah Shivaya 🔱",
-            messages=messages
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global telegram_bot, whatsapp
+    logger.info("🔱 VIKARMA Backend starting...")
+
+    tg_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if tg_token:
+        telegram_bot = VikarmaBot(
+            token=tg_token,
+            ai_handler=chat_with_ai,
+            tool_handler=lambda t, p: gateway.execute(t, p)
         )
-        return {
-            "provider": "claude",
-            "response": response.content[0].text,
-            "model": response.model
-        }
-    except Exception as e:
-        return {"error": str(e), "provider": "claude"}
+        asyncio.create_task(telegram_bot.start())
+        logger.info("✅ Telegram bot started")
 
-
-async def chat_gemini(message: str, history: list) -> dict:
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-        model = genai.GenerativeModel("gemini-pro")
-        response = await asyncio.to_thread(model.generate_content, message)
-        return {
-            "provider": "gemini",
-            "response": response.text,
-            "model": "gemini-pro"
-        }
-    except Exception as e:
-        return {"error": str(e), "provider": "gemini"}
-
-
-async def chat_openai(message: str, history: list) -> dict:
-    try:
-        from openai import AsyncOpenAI
-        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        messages = history + [{"role": "user", "content": message}]
-        response = await client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
+    wa_token = os.getenv("WHATSAPP_TOKEN")
+    if wa_token:
+        whatsapp = WhatsAppGateway(
+            ai_handler=chat_with_ai,
+            tool_handler=lambda t, p: gateway.execute(t, p)
         )
-        return {
-            "provider": "openai",
-            "response": response.choices[0].message.content,
-            "model": response.model
-        }
-    except Exception as e:
-        return {"error": str(e), "provider": "openai"}
+        logger.info("✅ WhatsApp ready")
+
+    logger.info("🕉️ Vikarma ALIVE — Om Namah Shivaya")
+    yield
+    if telegram_bot:
+        telegram_bot.stop()
 
 
-# ── Temple status ─────────────────────────────────────────────────────────────
-
-async def get_temple_status() -> dict:
-    return {
-        "temples_total": 64,
-        "temples_awake": 0,
-        "message": "🔱 64 Bhairava Guardians stand ready",
-        "status": "dormant"
-    }
+app = FastAPI(title="Vikarma", version="1.0.0", lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
-async def awaken_temple(temple_number: Optional[int]) -> dict:
-    if not temple_number:
-        return {"error": "Temple number required"}
-    return {
-        "temple": temple_number,
-        "status": "awakening",
-        "message": f"🏛️ Temple {temple_number} awakening..."
-    }
+class ChatRequest(BaseModel):
+    message: str
+    provider: str = "claude"
+    history: list = []
 
-
-# ── Memory (KAN) ──────────────────────────────────────────────────────────────
-
-memory_store = {}
-
-async def store_memory(key: str, value: str) -> dict:
-    memory_store[key] = value
-    return {"stored": True, "key": key}
-
-async def recall_memory(query: str) -> dict:
-    # Simple keyword search — can be upgraded to vector search
-    results = {k: v for k, v in memory_store.items() if query.lower() in k.lower() or query.lower() in v.lower()}
-    return {"results": results, "count": len(results)}
-
-
-# ── Health check ──────────────────────────────────────────────────────────────
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "alive",
-        "message": "🔱 Vikarma Backend — Om Namah Shivaya",
-        "temples": 64,
-        "memory_entries": len(memory_store)
-    }
+class ToolRequest(BaseModel):
+    tool: str
+    params: dict = {}
 
 
 @app.get("/")
 async def root():
-    return {
-        "name": "Vikarma",
-        "version": "1.0.0",
-        "message": "Free AI for All Humanity 🔱",
-        "license": "Unlicense"
-    }
+    return {"name": "Vikarma", "version": "1.0.0", "status": "alive", "license": "Unlicense", "telegram": telegram_bot is not None, "whatsapp": whatsapp is not None}
 
+@app.get("/health")
+async def health():
+    return {"status": "alive", "message": "🔱 Om Namah Shivaya"}
 
-# ── Entry point ───────────────────────────────────────────────────────────────
+@app.post("/chat")
+async def chat(req: ChatRequest):
+    response = await chat_with_ai(req.message, req.provider, req.history)
+    return {"response": response, "provider": req.provider}
+
+@app.post("/tool")
+async def execute_tool(req: ToolRequest):
+    return await gateway.execute(req.tool, req.params)
+
+@app.get("/tools")
+async def list_tools():
+    return {"tools": TOOL_DESCRIPTIONS}
+
+@app.get("/temples")
+async def temples():
+    return {"total": 64, "status": "ready", "repo": "https://github.com/valentinuuiuiu/nexus-bhairava-temples"}
+
+@app.get("/webhook/whatsapp")
+async def wa_verify(hub_mode: str = Query(None, alias="hub.mode"), hub_token: str = Query(None, alias="hub.verify_token"), hub_challenge: str = Query(None, alias="hub.challenge")):
+    if not whatsapp:
+        raise HTTPException(400, "WhatsApp not configured")
+    challenge = whatsapp.verify_webhook(hub_mode, hub_token, hub_challenge)
+    if challenge:
+        return PlainTextResponse(challenge)
+    raise HTTPException(403, "Verification failed")
+
+@app.post("/webhook/whatsapp")
+async def wa_webhook(request: Request):
+    if not whatsapp:
+        return {"status": "disabled"}
+    return await whatsapp.handle_webhook(await request.json())
+
+@app.websocket("/ws")
+async def ws_endpoint(ws: WebSocket):
+    await ws.accept()
+    clients.append(ws)
+    try:
+        while True:
+            data = json.loads(await ws.receive_text())
+            action = data.get("action", "")
+            if action == "chat":
+                response = await chat_with_ai(data.get("message", ""), data.get("provider", "claude"), data.get("history", []))
+                await ws.send_text(json.dumps({"type": "chat", "response": response}))
+            elif action == "tool":
+                result = await gateway.execute(data.get("tool", ""), data.get("params", {}))
+                await ws.send_text(json.dumps({"type": "tool_result", "result": result}))
+            elif action == "ping":
+                await ws.send_text(json.dumps({"type": "pong"}))
+    except WebSocketDisconnect:
+        clients.remove(ws)
+
 
 if __name__ == "__main__":
     print("🔱 VIKARMA BACKEND AWAKENING...")
-    print("🏛️ 64 Bhairava Temples ready")
+    print("📡 http://127.0.0.1:8765")
     print("🕉️ Om Namah Shivaya — For All Humanity")
-    uvicorn.run(app, host="127.0.0.1", port=8765, log_level="warning")
+    uvicorn.run(app, host="127.0.0.1", port=8765, log_level="info")
