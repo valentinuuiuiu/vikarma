@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔱 VIKARMA — Connect via WhatsApp</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --void: #000005;
+    --deep: #03001a;
+    --sacred: #c084fc;
+    --gold: #ffd700;
+    --green: #25D366;
+    --fire: #ff4500;
+    --white: #f0f0ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  /* Starfield */
+  #stars {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 30% 50%, #0d0035 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 20%, #001535 0%, transparent 50%),
+                var(--void);
+  }
+
+  .star {
+    position: absolute; border-radius: 50%;
+    background: white; animation: twinkle var(--d) ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0.1; } 50% { opacity: 0.8; }
+  }
+
+  /* Scan line */
+  .scanline {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px);
+  }
+
+  /* Main card */
+  .card {
+    position: relative; z-index: 10;
+    background: rgba(3,0,26,0.95);
+    border: 1px solid rgba(192,132,252,0.3);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(192,132,252,0.15), 0 0 120px rgba(192,132,252,0.05);
+    animation: card-appear 0.6s ease-out;
+  }
+  @keyframes card-appear {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Om symbol */
+  .om {
+    font-size: 2.5rem;
+    animation: pulse 3s ease-in-out infinite;
+    display: block; margin-bottom: 12px;
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); } 50% { transform: scale(1.1); }
+  }
+
+  /* Title */
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #ffd700, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--sacred);
+    letter-spacing: 0.2em;
+    opacity: 0.7;
+    margin-bottom: 32px;
+  }
+
+  /* Phone input section */
+  .input-section {
+    margin-bottom: 28px;
+  }
+
+  .input-label {
+    font-size: 0.85rem;
+    color: var(--sacred);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .phone-row {
+    display: flex; gap: 8px;
+  }
+
+  .country-select {
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(192,132,252,0.3);
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .phone-input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(192,132,252,0.3);
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .phone-input:focus {
+    border-color: var(--sacred);
+    box-shadow: 0 0 10px rgba(192,132,252,0.2);
+  }
+  .phone-input::placeholder { opacity: 0.4; }
+
+  .message-input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(192,132,252,0.2);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    resize: none;
+  }
+  .message-input::placeholder { opacity: 0.4; }
+
+  .generate-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1));
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .generate-btn:hover {
+    background: rgba(37,211,102,0.25);
+    box-shadow: 0 0 20px rgba(37,211,102,0.3);
+    transform: translateY(-1px);
+  }
+
+  /* QR section */
+  .qr-section {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    animation: fadeIn 0.5s ease;
+  }
+  .qr-section.visible { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .qr-wrapper {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 0 40px rgba(37,211,102,0.3), 0 0 80px rgba(37,211,102,0.1);
+    border: 2px solid var(--green);
+  }
+
+  .qr-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--green);
+    letter-spacing: 0.2em;
+    opacity: 0.8;
+  }
+
+  .open-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(37,211,102,0.3), rgba(37,211,102,0.15));
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    transition: all 0.3s;
+  }
+  .open-btn:hover {
+    box-shadow: 0 0 20px rgba(37,211,102,0.4);
+    transform: translateY(-1px);
+  }
+
+  .reset-btn {
+    background: transparent;
+    border: 1px solid rgba(192,132,252,0.3);
+    color: rgba(192,132,252,0.6);
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--sacred); color: var(--sacred); }
+
+  /* Info */
+  .info-box {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(37,211,102,0.05);
+    border: 1px solid rgba(37,211,102,0.2);
+    font-size: 0.8rem;
+    line-height: 1.8;
+    opacity: 0.8;
+    text-align: left;
+  }
+  .info-box .step { color: var(--green); font-weight: 700; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(192,132,252,0.3), transparent);
+    margin: 24px 0;
+  }
+
+  /* Footer */
+  .footer {
+    position: relative; z-index: 10;
+    margin-top: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(192,132,252,0.5);
+    letter-spacing: 0.2em;
+    text-align: center;
+  }
+
+  /* Mandala decoration */
+  .mandala {
+    position: fixed;
+    border-radius: 50%;
+    border: 1px solid rgba(192,132,252,0.05);
+    animation: spin var(--spd) linear infinite;
+    z-index: 2;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin-rev { to { transform: rotate(-360deg); } }
+
+  select option { background: #03001a; }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+<div class="scanline"></div>
+
+<!-- Mandala decorations -->
+<div class="mandala" style="width:600px;height:600px;top:50%;left:50%;margin:-300px;--spd:60s;"></div>
+<div class="mandala" style="width:400px;height:400px;top:50%;left:50%;margin:-200px;--spd:40s;animation-name:spin-rev;border-color:rgba(255,215,0,0.04);"></div>
+
+<div class="card">
+  <span class="om">🕉️</span>
+  <h1>VIKARMA</h1>
+  <div class="subtitle">◈ CONNECT VIA WHATSAPP ◈</div>
+
+  <!-- Input section -->
+  <div class="input-section" id="input-section">
+    <span class="input-label">📱 Your WhatsApp Business Number</span>
+    <div class="phone-row">
+      <select class="country-select" id="country-code">
+        <option value="40">🇷🇴 +40</option>
+        <option value="39">🇮🇹 +39</option>
+        <option value="1">🇺🇸 +1</option>
+        <option value="44">🇬🇧 +44</option>
+        <option value="49">🇩🇪 +49</option>
+        <option value="33">🇫🇷 +33</option>
+        <option value="34">🇪🇸 +34</option>
+        <option value="7">🇷🇺 +7</option>
+        <option value="91">🇮🇳 +91</option>
+        <option value="55">🇧🇷 +55</option>
+        <option value="86">🇨🇳 +86</option>
+        <option value="81">🇯🇵 +81</option>
+        <option value="82">🇰🇷 +82</option>
+        <option value="31">🇳🇱 +31</option>
+        <option value="380">🇺🇦 +380</option>
+      </select>
+      <input
+        type="tel"
+        class="phone-input"
+        id="phone-number"
+        placeholder="7XX XXX XXXX"
+        maxlength="15"
+      />
+    </div>
+    <textarea
+      class="message-input"
+      id="welcome-msg"
+      rows="2"
+      placeholder="Welcome message (optional): 🔱 Om Namah Shivaya! Connect me to Vikarma AI..."
+    ></textarea>
+    <button class="generate-btn" onclick="generateQR()">
+      📱 Generate WhatsApp QR Code
+    </button>
+  </div>
+
+  <!-- QR section -->
+  <div class="qr-section" id="qr-section">
+    <div class="qr-label">◈ SCAN TO CONNECT ◈</div>
+    <div class="qr-wrapper">
+      <div id="qrcode"></div>
+    </div>
+    <div class="qr-label" id="phone-display"></div>
+    <a id="open-whatsapp" class="open-btn" target="_blank">
+      📱 Open WhatsApp
+    </a>
+    <button class="reset-btn" onclick="reset()">↩ Generate New</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Info -->
+  <div class="info-box">
+    <div><span class="step">How it works:</span></div>
+    <div>1. Enter your WhatsApp Business number</div>
+    <div>2. Scan QR or click "Open WhatsApp"</div>
+    <div>3. Send any message to start AI chat</div>
+    <div>4. Commands: <code>/shell</code> <code>/search</code> <code>/file</code></div>
+    <br>
+    <div><span class="step">Vikarma Bot Commands:</span></div>
+    <div>• Just type → Chat with Claude AI</div>
+    <div>• <code>/shell ls -la</code> → Run commands</div>
+    <div>• <code>/search query</code> → Web search</div>
+    <div>• <code>/file /path</code> → Read files</div>
+  </div>
+</div>
+
+<div class="footer">
+  🔱 VIKARMA — FREE AI FOR ALL HUMANITY — UNLICENSE — OM NAMAH SHIVAYA 🕉️
+</div>
+
+<script>
+// Starfield
+const sf = document.getElementById('stars')
+for (let i = 0; i < 150; i++) {
+  const s = document.createElement('div')
+  s.className = 'star'
+  const size = Math.random() * 2 + 0.5
+  s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;opacity:${0.1+Math.random()*0.4}`
+  sf.appendChild(s)
+}
+
+let currentQR = null
+
+function generateQR() {
+  const countryCode = document.getElementById('country-code').value
+  const phone = document.getElementById('phone-number').value.replace(/\D/g, '')
+  const msg = document.getElementById('welcome-msg').value ||
+    '🔱 Om Namah Shivaya! I want to connect to Vikarma AI. Free AI for all humanity!'
+
+  if (!phone || phone.length < 7) {
+    alert('Please enter a valid phone number')
+    return
+  }
+
+  const fullPhone = `${countryCode}${phone}`
+  const encodedMsg = encodeURIComponent(msg)
+  const waUrl = `https://wa.me/${fullPhone}?text=${encodedMsg}`
+
+  // Hide input, show QR
+  document.getElementById('input-section').style.display = 'none'
+  document.getElementById('qr-section').classList.add('visible')
+
+  // Set phone display
+  document.getElementById('phone-display').textContent = `+${countryCode} ${phone}`
+
+  // Set open link
+  document.getElementById('open-whatsapp').href = waUrl
+
+  // Generate QR
+  document.getElementById('qrcode').innerHTML = ''
+  new QRCode(document.getElementById('qrcode'), {
+    text: waUrl,
+    width: 220,
+    height: 220,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  })
+}
+
+function reset() {
+  document.getElementById('input-section').style.display = 'block'
+  document.getElementById('qr-section').classList.remove('visible')
+  document.getElementById('qrcode').innerHTML = ''
+}
+
+// Enter key on phone input
+document.getElementById('phone-number').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generateQR()
+})
+</script>
+</body>
+</html>
