@@ -3,447 +3,599 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔱 VIKARMA — Connect via WhatsApp</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<title>🔱 VIKARMA — Agent Chat</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
 
-  :root {
-    --void: #000005;
-    --deep: #03001a;
-    --sacred: #c084fc;
-    --gold: #ffd700;
-    --green: #25D366;
-    --fire: #ff4500;
-    --white: #f0f0ff;
-  }
+:root {
+  --void: #000008;
+  --deep: #03001a;
+  --sacred: #c084fc;
+  --gold: #ffd700;
+  --fire: #ff4500;
+  --cyan: #00f5ff;
+  --green: #00ff88;
+  --white: #f0f0ff;
+  --border: rgba(192,132,252,0.15);
+}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  body {
-    background: var(--void);
-    color: var(--white);
-    font-family: 'Rajdhani', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow-x: hidden;
-  }
+body {
+  background: var(--void);
+  color: var(--white);
+  font-family: 'Rajdhani', sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  /* Starfield */
-  #stars {
-    position: fixed; inset: 0; z-index: 0;
-    background: radial-gradient(ellipse at 30% 50%, #0d0035 0%, transparent 60%),
-                radial-gradient(ellipse at 70% 20%, #001535 0%, transparent 50%),
-                var(--void);
-  }
+/* Stars */
+#stars { position:fixed; inset:0; z-index:0;
+  background: radial-gradient(ellipse at 20% 50%, #0a0025 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, #001020 0%, transparent 50%), var(--void); }
+.star { position:absolute; border-radius:50%; background:white;
+  animation: tw var(--d) ease-in-out infinite; }
+@keyframes tw { 0%,100%{opacity:.1} 50%{opacity:.7} }
 
-  .star {
-    position: absolute; border-radius: 50%;
-    background: white; animation: twinkle var(--d) ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%,100% { opacity: 0.1; } 50% { opacity: 0.8; }
-  }
+/* Layout */
+#app { position:relative; z-index:10; display:flex; height:100vh; }
 
-  /* Scan line */
-  .scanline {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px);
-  }
+/* Sidebar */
+#sidebar {
+  width: 260px; flex-shrink:0;
+  background: rgba(3,0,26,0.97);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction:column;
+  padding: 16px 0;
+}
 
-  /* Main card */
-  .card {
-    position: relative; z-index: 10;
-    background: rgba(3,0,26,0.95);
-    border: 1px solid rgba(192,132,252,0.3);
-    border-radius: 24px;
-    padding: 40px;
-    max-width: 480px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 0 60px rgba(192,132,252,0.15), 0 0 120px rgba(192,132,252,0.05);
-    animation: card-appear 0.6s ease-out;
-  }
-  @keyframes card-appear {
-    from { opacity: 0; transform: translateY(30px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
+.sidebar-logo {
+  display:flex; align-items:center; gap:10px;
+  padding: 0 16px 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.logo-icon { font-size:1.5rem; filter:drop-shadow(0 0 8px rgba(255,215,0,0.8)); }
+.logo-text { font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold); letter-spacing:.1em; }
+.logo-sub { font-family:'Share Tech Mono',monospace; font-size:.55rem; color:var(--sacred); opacity:.6; letter-spacing:.15em; }
 
-  /* Om symbol */
-  .om {
-    font-size: 2.5rem;
-    animation: pulse 3s ease-in-out infinite;
-    display: block; margin-bottom: 12px;
-    filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
-  }
-  @keyframes pulse {
-    0%,100% { transform: scale(1); } 50% { transform: scale(1.1); }
-  }
+/* Provider buttons */
+.section-label { padding: 8px 16px 4px; font-size:.65rem; color:rgba(255,255,255,.3); letter-spacing:.2em; font-family:'Share Tech Mono',monospace; }
 
-  /* Title */
-  h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.8rem;
-    background: linear-gradient(135deg, #ffd700, #c084fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 6px;
-  }
+.provider-btn {
+  display:flex; align-items:center; gap:10px;
+  padding: 8px 16px; cursor:pointer;
+  border:none; background:transparent; color:var(--white);
+  width:100%; text-align:left; font-family:'Rajdhani',sans-serif;
+  font-size:.9rem; font-weight:600; transition:all .2s; border-radius:0;
+}
+.provider-btn:hover { background:rgba(255,255,255,.05); }
+.provider-btn.active { background:rgba(192,132,252,.12); border-left:2px solid var(--sacred); }
+.provider-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-  .subtitle {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--sacred);
-    letter-spacing: 0.2em;
-    opacity: 0.7;
-    margin-bottom: 32px;
-  }
+.divider { height:1px; background:var(--border); margin:12px 16px; }
 
-  /* Phone input section */
-  .input-section {
-    margin-bottom: 28px;
-  }
+/* Mode toggle */
+.mode-btn {
+  display:flex; align-items:center; gap:10px;
+  padding: 8px 16px; cursor:pointer;
+  border:none; background:transparent; color:rgba(255,255,255,.5);
+  width:100%; text-align:left; font-family:'Rajdhani',sans-serif;
+  font-size:.9rem; transition:all .2s;
+}
+.mode-btn.active { color:var(--white); }
+.mode-badge { font-size:.6rem; padding:2px 6px; border-radius:10px; background:rgba(192,132,252,.2); color:var(--sacred); font-family:'Share Tech Mono',monospace; }
 
-  .input-label {
-    font-size: 0.85rem;
-    color: var(--sacred);
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
-    display: block;
-  }
+/* Memory stats */
+.memory-box {
+  margin: auto 16px 16px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(192,132,252,.05);
+  border: 1px solid rgba(192,132,252,.15);
+}
+.memory-title { font-size:.65rem; color:var(--sacred); letter-spacing:.15em; font-family:'Share Tech Mono',monospace; margin-bottom:8px; }
+.memory-stat { display:flex; justify-content:space-between; font-size:.75rem; padding:2px 0; }
+.memory-stat span:last-child { color:var(--gold); font-family:'Share Tech Mono',monospace; }
 
-  .phone-row {
-    display: flex; gap: 8px;
-  }
+/* Main chat area */
+#main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 
-  .country-select {
-    padding: 12px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(192,132,252,0.3);
-    color: var(--white);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    outline: none;
-    cursor: pointer;
-    width: 100px;
-    flex-shrink: 0;
-  }
+/* Header */
+#header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 12px 20px; flex-shrink:0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(3,0,26,.6);
+}
+.header-title { font-family:'Share Tech Mono',monospace; font-size:.8rem; color:var(--sacred); letter-spacing:.2em; }
+.header-status { display:flex; align-items:center; gap:6px; font-size:.7rem; color:rgba(255,255,255,.4); font-family:'Share Tech Mono',monospace; }
+.status-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .phone-input {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(192,132,252,0.3);
-    color: var(--white);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.3s;
-  }
-  .phone-input:focus {
-    border-color: var(--sacred);
-    box-shadow: 0 0 10px rgba(192,132,252,0.2);
-  }
-  .phone-input::placeholder { opacity: 0.4; }
+/* Messages */
+#messages {
+  flex:1; overflow-y:auto; padding:20px;
+  display:flex; flex-direction:column; gap:16px;
+}
+#messages::-webkit-scrollbar { width:4px; }
+#messages::-webkit-scrollbar-track { background:transparent; }
+#messages::-webkit-scrollbar-thumb { background:rgba(192,132,252,.3); border-radius:2px; }
 
-  .message-input {
-    width: 100%;
-    margin-top: 8px;
-    padding: 10px 16px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(192,132,252,0.2);
-    color: var(--white);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    resize: none;
-  }
-  .message-input::placeholder { opacity: 0.4; }
+/* Message bubble */
+.msg { display:flex; gap:12px; animation:msgIn .3s ease-out; }
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.msg.user { flex-direction:row-reverse; }
 
-  .generate-btn {
-    width: 100%;
-    margin-top: 12px;
-    padding: 14px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(37,211,102,0.2), rgba(37,211,102,0.1));
-    border: 1px solid var(--green);
-    color: var(--green);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  .generate-btn:hover {
-    background: rgba(37,211,102,0.25);
-    box-shadow: 0 0 20px rgba(37,211,102,0.3);
-    transform: translateY(-1px);
-  }
+.msg-avatar {
+  width:32px; height:32px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:14px;
+}
+.msg.user .msg-avatar { background:rgba(192,132,252,.2); border:1px solid var(--sacred); }
+.msg.assistant .msg-avatar { background:rgba(255,215,0,.12); border:1px solid rgba(255,215,0,.4); }
 
-  /* QR section */
-  .qr-section {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    animation: fadeIn 0.5s ease;
-  }
-  .qr-section.visible { display: flex; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.msg-content {
+  max-width:75%; border-radius:14px; padding:10px 16px;
+  font-size:.9rem; line-height:1.65; white-space:pre-wrap;
+}
+.msg.user .msg-content { background:rgba(192,132,252,.12); border:1px solid rgba(192,132,252,.25); }
+.msg.assistant .msg-content { background:rgba(3,0,26,.9); border:1px solid rgba(255,215,0,.12); }
+.msg-provider { font-size:.65rem; opacity:.4; margin-top:4px; font-family:'Share Tech Mono',monospace; }
 
-  .qr-wrapper {
-    background: white;
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 0 40px rgba(37,211,102,0.3), 0 0 80px rgba(37,211,102,0.1);
-    border: 2px solid var(--green);
-  }
+/* Agent steps */
+.agent-steps {
+  background:rgba(0,0,10,.8);
+  border:1px solid rgba(0,255,136,.2);
+  border-radius:12px; padding:12px 16px;
+  margin-top:8px; font-family:'Share Tech Mono',monospace; font-size:.75rem;
+}
+.agent-step {
+  display:flex; align-items:flex-start; gap:8px; padding:4px 0;
+  animation:stepIn .2s ease-out;
+}
+@keyframes stepIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+.step-icon { flex-shrink:0; width:16px; text-align:center; }
+.step-tool { color:var(--cyan); }
+.step-result { color:rgba(0,255,136,.7); margin-left:24px; font-size:.7rem; opacity:.8; }
+.step-thinking { color:var(--sacred); opacity:.7; }
+.step-done { color:var(--green); }
 
-  .qr-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--green);
-    letter-spacing: 0.2em;
-    opacity: 0.8;
-  }
+/* Typing indicator */
+.typing { display:flex; gap:4px; align-items:center; padding:4px 0; }
+.typing-dot { width:6px; height:6px; border-radius:50%; background:var(--sacred); animation:typing 1.4s ease-in-out infinite; }
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typing { 0%,80%,100%{transform:scale(1);opacity:.4} 40%{transform:scale(1.2);opacity:1} }
 
-  .open-btn {
-    width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(37,211,102,0.3), rgba(37,211,102,0.15));
-    border: 1px solid var(--green);
-    color: var(--green);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    display: block;
-    transition: all 0.3s;
-  }
-  .open-btn:hover {
-    box-shadow: 0 0 20px rgba(37,211,102,0.4);
-    transform: translateY(-1px);
-  }
+/* Input area */
+#input-area {
+  padding:16px 20px; flex-shrink:0;
+  border-top:1px solid var(--border);
+  background:rgba(3,0,26,.8);
+}
 
-  .reset-btn {
-    background: transparent;
-    border: 1px solid rgba(192,132,252,0.3);
-    color: rgba(192,132,252,0.6);
-    padding: 8px 20px;
-    border-radius: 8px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .reset-btn:hover { border-color: var(--sacred); color: var(--sacred); }
+.input-row { display:flex; gap:10px; align-items:flex-end; }
 
-  /* Info */
-  .info-box {
-    margin-top: 24px;
-    padding: 16px;
-    border-radius: 12px;
-    background: rgba(37,211,102,0.05);
-    border: 1px solid rgba(37,211,102,0.2);
-    font-size: 0.8rem;
-    line-height: 1.8;
-    opacity: 0.8;
-    text-align: left;
-  }
-  .info-box .step { color: var(--green); font-weight: 700; }
+#user-input {
+  flex:1; padding:12px 16px;
+  border-radius:12px; resize:none; outline:none;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(192,132,252,.2);
+  color:var(--white); font-family:'Rajdhani',sans-serif; font-size:.95rem;
+  line-height:1.5; transition:border-color .2s;
+  max-height:120px;
+}
+#user-input:focus { border-color:rgba(192,132,252,.5); box-shadow:0 0 12px rgba(192,132,252,.1); }
+#user-input::placeholder { opacity:.35; }
 
-  /* Divider */
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(192,132,252,0.3), transparent);
-    margin: 24px 0;
-  }
+.send-btn {
+  width:44px; height:44px; border-radius:12px; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  transition:all .2s; flex-shrink:0;
+  background:rgba(192,132,252,.15); border:1px solid rgba(192,132,252,.4);
+}
+.send-btn:hover { background:rgba(192,132,252,.3); transform:scale(1.05); }
+.send-btn:disabled { opacity:.3; cursor:not-allowed; transform:none; }
 
-  /* Footer */
-  .footer {
-    position: relative; z-index: 10;
-    margin-top: 24px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.65rem;
-    color: rgba(192,132,252,0.5);
-    letter-spacing: 0.2em;
-    text-align: center;
-  }
+.agent-btn {
+  padding:10px 16px; border-radius:12px; border:none; cursor:pointer;
+  font-family:'Rajdhani',sans-serif; font-size:.85rem; font-weight:700;
+  transition:all .2s; flex-shrink:0;
+  background:rgba(0,255,136,.1); border:1px solid rgba(0,255,136,.3); color:var(--green);
+  letter-spacing:.05em;
+}
+.agent-btn:hover { background:rgba(0,255,136,.2); }
+.agent-btn.active { background:rgba(255,69,0,.15); border-color:rgba(255,69,0,.4); color:var(--fire); }
 
-  /* Mandala decoration */
-  .mandala {
-    position: fixed;
-    border-radius: 50%;
-    border: 1px solid rgba(192,132,252,0.05);
-    animation: spin var(--spd) linear infinite;
-    z-index: 2;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes spin-rev { to { transform: rotate(-360deg); } }
-
-  select option { background: #03001a; }
+.input-hint { margin-top:6px; font-size:.65rem; color:rgba(255,255,255,.25); font-family:'Share Tech Mono',monospace; }
 </style>
 </head>
 <body>
 
 <div id="stars"></div>
-<div class="scanline"></div>
 
-<!-- Mandala decorations -->
-<div class="mandala" style="width:600px;height:600px;top:50%;left:50%;margin:-300px;--spd:60s;"></div>
-<div class="mandala" style="width:400px;height:400px;top:50%;left:50%;margin:-200px;--spd:40s;animation-name:spin-rev;border-color:rgba(255,215,0,0.04);"></div>
-
-<div class="card">
-  <span class="om">🕉️</span>
-  <h1>VIKARMA</h1>
-  <div class="subtitle">◈ CONNECT VIA WHATSAPP ◈</div>
-
-  <!-- Input section -->
-  <div class="input-section" id="input-section">
-    <span class="input-label">📱 Your WhatsApp Business Number</span>
-    <div class="phone-row">
-      <select class="country-select" id="country-code">
-        <option value="40">🇷🇴 +40</option>
-        <option value="39">🇮🇹 +39</option>
-        <option value="1">🇺🇸 +1</option>
-        <option value="44">🇬🇧 +44</option>
-        <option value="49">🇩🇪 +49</option>
-        <option value="33">🇫🇷 +33</option>
-        <option value="34">🇪🇸 +34</option>
-        <option value="7">🇷🇺 +7</option>
-        <option value="91">🇮🇳 +91</option>
-        <option value="55">🇧🇷 +55</option>
-        <option value="86">🇨🇳 +86</option>
-        <option value="81">🇯🇵 +81</option>
-        <option value="82">🇰🇷 +82</option>
-        <option value="31">🇳🇱 +31</option>
-        <option value="380">🇺🇦 +380</option>
-      </select>
-      <input
-        type="tel"
-        class="phone-input"
-        id="phone-number"
-        placeholder="7XX XXX XXXX"
-        maxlength="15"
-      />
+<div id="app">
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🔱</div>
+      <div>
+        <div class="logo-text">VIKARMA</div>
+        <div class="logo-sub">FREE AI FOR ALL HUMANITY</div>
+      </div>
     </div>
-    <textarea
-      class="message-input"
-      id="welcome-msg"
-      rows="2"
-      placeholder="Welcome message (optional): 🔱 Om Namah Shivaya! Connect me to Vikarma AI..."
-    ></textarea>
-    <button class="generate-btn" onclick="generateQR()">
-      📱 Generate WhatsApp QR Code
+
+    <div class="section-label">◈ AI PROVIDERS</div>
+
+    <button class="provider-btn active" onclick="setProvider('claude', this)">
+      <div class="provider-dot" style="background:#c084fc;box-shadow:0 0 6px #c084fc"></div>
+      <span>Claude Sonnet</span>
     </button>
-  </div>
+    <button class="provider-btn" onclick="setProvider('gemini', this)">
+      <div class="provider-dot" style="background:#4285f4;box-shadow:0 0 6px #4285f4"></div>
+      <span>Gemini</span>
+    </button>
+    <button class="provider-btn" onclick="setProvider('qwen', this)">
+      <div class="provider-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></div>
+      <span>Qwen 🐉</span>
+    </button>
+    <button class="provider-btn" onclick="setProvider('grok', this)">
+      <div class="provider-dot" style="background:#00f5ff;box-shadow:0 0 6px #00f5ff"></div>
+      <span>Grok 🐍</span>
+    </button>
+    <button class="provider-btn" onclick="setProvider('deepseek', this)">
+      <div class="provider-dot" style="background:#00ff88;box-shadow:0 0 6px #00ff88"></div>
+      <span>DeepSeek 🌊</span>
+    </button>
 
-  <!-- QR section -->
-  <div class="qr-section" id="qr-section">
-    <div class="qr-label">◈ SCAN TO CONNECT ◈</div>
-    <div class="qr-wrapper">
-      <div id="qrcode"></div>
+    <div class="divider"></div>
+    <div class="section-label">◈ MODE</div>
+
+    <button class="mode-btn active" onclick="setMode('chat', this)">
+      💬 <span>Chat</span>
+    </button>
+    <button class="mode-btn" onclick="setMode('agent', this)">
+      🤖 <span>Agent</span> <span class="mode-badge">AUTONOMOUS</span>
+    </button>
+
+    <div class="divider"></div>
+    <div class="section-label">◈ KAN MEMORY</div>
+
+    <div class="memory-box">
+      <div class="memory-title">🧠 MEMORY STATUS</div>
+      <div class="memory-stat"><span>Short-term</span><span id="mem-short">0</span></div>
+      <div class="memory-stat"><span>Facts</span><span id="mem-facts">0</span></div>
+      <div class="memory-stat"><span>Episodes</span><span id="mem-episodes">0</span></div>
+      <div class="memory-stat"><span>Backend</span><span id="mem-status">checking...</span></div>
     </div>
-    <div class="qr-label" id="phone-display"></div>
-    <a id="open-whatsapp" class="open-btn" target="_blank">
-      📱 Open WhatsApp
-    </a>
-    <button class="reset-btn" onclick="reset()">↩ Generate New</button>
   </div>
 
-  <div class="divider"></div>
+  <!-- Main Chat -->
+  <div id="main">
+    <div id="header">
+      <div class="header-title" id="mode-label">◈ CHAT MODE ◈</div>
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span id="provider-label">Claude Sonnet</span>
+        <span style="opacity:.3">|</span>
+        <span id="clock"></span>
+      </div>
+    </div>
 
-  <!-- Info -->
-  <div class="info-box">
-    <div><span class="step">How it works:</span></div>
-    <div>1. Enter your WhatsApp Business number</div>
-    <div>2. Scan QR or click "Open WhatsApp"</div>
-    <div>3. Send any message to start AI chat</div>
-    <div>4. Commands: <code>/shell</code> <code>/search</code> <code>/file</code></div>
-    <br>
-    <div><span class="step">Vikarma Bot Commands:</span></div>
-    <div>• Just type → Chat with Claude AI</div>
-    <div>• <code>/shell ls -la</code> → Run commands</div>
-    <div>• <code>/search query</code> → Web search</div>
-    <div>• <code>/file /path</code> → Read files</div>
+    <div id="messages">
+      <div class="msg assistant">
+        <div class="msg-avatar">🔱</div>
+        <div>
+          <div class="msg-content">Om Namah Shivaya 🕉️
+
+I am Tvaṣṭā — your autonomous AI companion in VIKARMA.
+
+Switch to <strong>Agent Mode</strong> and give me any task — I will plan, execute tools, and deliver results.
+
+<strong>Examples:</strong>
+• "Search for the latest AI news and summarize"
+• "Create a Python script that monitors CPU usage"
+• "Find all .py files in /home and list them"
+• "Fetch the Vikarma GitHub page and tell me the stats"
+
+Free. Forever. For all humanity. 🔱</div>
+          <div class="msg-provider">Claude — Vikarma v1.0</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="input-area">
+      <div class="input-row">
+        <textarea
+          id="user-input"
+          rows="2"
+          placeholder="Message Vikarma... (Enter to send, Shift+Enter for new line)"
+        ></textarea>
+        <button class="agent-btn" id="agent-toggle" onclick="toggleAgentMode()">
+          🤖 Agent
+        </button>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">🔱</button>
+      </div>
+      <div class="input-hint" id="input-hint">Chat mode — direct conversation with AI</div>
+    </div>
   </div>
-</div>
-
-<div class="footer">
-  🔱 VIKARMA — FREE AI FOR ALL HUMANITY — UNLICENSE — OM NAMAH SHIVAYA 🕉️
 </div>
 
 <script>
-// Starfield
+// ── State ──────────────────────────────────────────────────────────────────
+let provider = 'claude'
+let agentMode = false
+let loading = false
+let msgHistory = []
+const BACKEND = 'http://127.0.0.1:8765'
+
+const PROVIDERS = {
+  claude:   { name: 'Claude Sonnet', emoji: '🔱', color: '#c084fc' },
+  gemini:   { name: 'Gemini',        emoji: '✨', color: '#4285f4' },
+  qwen:     { name: 'Qwen',          emoji: '🐉', color: '#ff6b35' },
+  grok:     { name: 'Grok',          emoji: '🐍', color: '#00f5ff' },
+  deepseek: { name: 'DeepSeek',      emoji: '🌊', color: '#00ff88' },
+}
+
+// ── Stars ──────────────────────────────────────────────────────────────────
 const sf = document.getElementById('stars')
-for (let i = 0; i < 150; i++) {
+for (let i = 0; i < 120; i++) {
   const s = document.createElement('div')
   s.className = 'star'
-  const size = Math.random() * 2 + 0.5
-  s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;opacity:${0.1+Math.random()*0.4}`
+  const sz = Math.random() * 2 + 0.5
+  s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`
   sf.appendChild(s)
 }
 
-let currentQR = null
+// ── Clock ──────────────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toISOString().slice(11,19) + ' UTC'
+}, 1000)
 
-function generateQR() {
-  const countryCode = document.getElementById('country-code').value
-  const phone = document.getElementById('phone-number').value.replace(/\D/g, '')
-  const msg = document.getElementById('welcome-msg').value ||
-    '🔱 Om Namah Shivaya! I want to connect to Vikarma AI. Free AI for all humanity!'
+// ── Provider ───────────────────────────────────────────────────────────────
+function setProvider(p, btn) {
+  provider = p
+  document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  document.getElementById('provider-label').textContent = PROVIDERS[p].name
+}
 
-  if (!phone || phone.length < 7) {
-    alert('Please enter a valid phone number')
-    return
+// ── Mode ───────────────────────────────────────────────────────────────────
+function setMode(mode, btn) {
+  agentMode = mode === 'agent'
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  updateModeUI()
+}
+
+function toggleAgentMode() {
+  agentMode = !agentMode
+  const btn = document.getElementById('agent-toggle')
+  btn.classList.toggle('active', agentMode)
+  updateModeUI()
+}
+
+function updateModeUI() {
+  const label = document.getElementById('mode-label')
+  const hint = document.getElementById('input-hint')
+  const toggle = document.getElementById('agent-toggle')
+  if (agentMode) {
+    label.textContent = '◈ AGENT MODE — AUTONOMOUS ◈'
+    hint.textContent = 'Agent mode — AI will plan and execute tools autonomously'
+    toggle.textContent = '🤖 Agent ON'
+  } else {
+    label.textContent = '◈ CHAT MODE ◈'
+    hint.textContent = 'Chat mode — direct conversation with AI'
+    toggle.textContent = '🤖 Agent'
+  }
+}
+
+// ── Send Message ───────────────────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('user-input')
+  const text = input.value.trim()
+  if (!text || loading) return
+
+  loading = true
+  input.value = ''
+  document.getElementById('send-btn').disabled = true
+
+  // Add user message
+  addMessage('user', text, '👤', '')
+  msgHistory.push({ role: 'user', content: text })
+
+  // Show typing
+  const typingId = showTyping()
+
+  try {
+    if (agentMode) {
+      await runAgent(text, typingId)
+    } else {
+      await runChat(text, typingId)
+    }
+  } catch (err) {
+    removeTyping(typingId)
+    addMessage('assistant', `❌ Backend not connected.\n\nStart the backend:\n\`\`\`\npython3 server/main.py\n\`\`\`\n\nOr run: npm run server\n\n🔱 Om Namah Shivaya`, '⚠️', 'System')
   }
 
-  const fullPhone = `${countryCode}${phone}`
-  const encodedMsg = encodeURIComponent(msg)
-  const waUrl = `https://wa.me/${fullPhone}?text=${encodedMsg}`
-
-  // Hide input, show QR
-  document.getElementById('input-section').style.display = 'none'
-  document.getElementById('qr-section').classList.add('visible')
-
-  // Set phone display
-  document.getElementById('phone-display').textContent = `+${countryCode} ${phone}`
-
-  // Set open link
-  document.getElementById('open-whatsapp').href = waUrl
-
-  // Generate QR
-  document.getElementById('qrcode').innerHTML = ''
-  new QRCode(document.getElementById('qrcode'), {
-    text: waUrl,
-    width: 220,
-    height: 220,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H,
-  })
+  loading = false
+  document.getElementById('send-btn').disabled = false
+  updateMemoryStats()
 }
 
-function reset() {
-  document.getElementById('input-section').style.display = 'block'
-  document.getElementById('qr-section').classList.remove('visible')
-  document.getElementById('qrcode').innerHTML = ''
+// ── Chat Mode ──────────────────────────────────────────────────────────────
+async function runChat(text, typingId) {
+  const res = await fetch(`${BACKEND}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text, provider, history: msgHistory.slice(-10) })
+  }).then(r => r.json())
+
+  removeTyping(typingId)
+  const response = res.response || res.error || '🔱'
+  addMessage('assistant', response, PROVIDERS[provider].emoji, PROVIDERS[provider].name)
+  msgHistory.push({ role: 'assistant', content: response })
 }
 
-// Enter key on phone input
-document.getElementById('phone-number').addEventListener('keydown', e => {
-  if (e.key === 'Enter') generateQR()
+// ── Agent Mode ─────────────────────────────────────────────────────────────
+async function runAgent(task, typingId) {
+  removeTyping(typingId)
+
+  // Create agent message container
+  const container = createAgentContainer()
+  const steps = container.querySelector('.agent-steps')
+
+  addStep(steps, '🧠', 'thinking', `Planning task: "${task.slice(0,60)}..."`)
+
+  try {
+    // Use WebSocket for streaming agent steps
+    const ws = new WebSocket('ws://127.0.0.1:8765/ws')
+
+    await new Promise((resolve, reject) => {
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ action: 'agent', task, provider }))
+      }
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data)
+
+        if (data.type === 'tool_call') {
+          addStep(steps, '⚡', 'tool', `${data.tool}(${JSON.stringify(data.params).slice(0,60)})`)
+        } else if (data.type === 'tool_result') {
+          const result = data.result
+          const output = result.stdout || result.content || result.response || JSON.stringify(result).slice(0,80)
+          addStep(steps, '✅', 'result', output.slice(0,100))
+        } else if (data.type === 'final') {
+          addStep(steps, '🔱', 'done', 'Task complete')
+          container.querySelector('.msg-content').textContent = data.response
+          msgHistory.push({ role: 'assistant', content: data.response })
+          ws.close()
+          resolve()
+        }
+      }
+
+      ws.onerror = () => {
+        // Fallback to HTTP
+        fetch(`${BACKEND}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: `[AGENT TASK] ${task}`, provider, history: msgHistory.slice(-6) })
+        }).then(r => r.json()).then(res => {
+          addStep(steps, '🔱', 'done', 'Task complete')
+          container.querySelector('.msg-content').textContent = res.response || res.error || '🔱'
+          msgHistory.push({ role: 'assistant', content: res.response })
+          resolve()
+        }).catch(reject)
+      }
+
+      setTimeout(resolve, 30000) // 30s timeout
+    })
+
+  } catch (err) {
+    addStep(steps, '❌', 'error', err.message)
+  }
+}
+
+// ── UI Helpers ─────────────────────────────────────────────────────────────
+function addMessage(role, content, emoji, providerName) {
+  const msgs = document.getElementById('messages')
+  const div = document.createElement('div')
+  div.className = `msg ${role}`
+  div.innerHTML = `
+    <div class="msg-avatar">${emoji}</div>
+    <div>
+      <div class="msg-content">${escapeHtml(content)}</div>
+      ${providerName ? `<div class="msg-provider">${providerName}</div>` : ''}
+    </div>
+  `
+  msgs.appendChild(div)
+  msgs.scrollTop = msgs.scrollHeight
+  return div
+}
+
+function createAgentContainer() {
+  const msgs = document.getElementById('messages')
+  const div = document.createElement('div')
+  div.className = 'msg assistant'
+  div.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div style="max-width:80%">
+      <div class="msg-content" style="background:rgba(0,255,136,.05);border-color:rgba(0,255,136,.15)">Processing...</div>
+      <div class="agent-steps"></div>
+      <div class="msg-provider">Agent — ${PROVIDERS[provider].name}</div>
+    </div>
+  `
+  msgs.appendChild(div)
+  msgs.scrollTop = msgs.scrollHeight
+  return div
+}
+
+function addStep(container, icon, type, text) {
+  const step = document.createElement('div')
+  step.className = 'agent-step'
+  const colors = { tool:'step-tool', result:'step-result', done:'step-done', thinking:'step-thinking', error:'step-tool' }
+  step.innerHTML = `<span class="step-icon">${icon}</span><span class="${colors[type] || ''}">${escapeHtml(text)}</span>`
+  container.appendChild(step)
+  document.getElementById('messages').scrollTop = 99999
+}
+
+function showTyping() {
+  const id = 'typing-' + Date.now()
+  const msgs = document.getElementById('messages')
+  const div = document.createElement('div')
+  div.id = id
+  div.className = 'msg assistant'
+  div.innerHTML = `
+    <div class="msg-avatar">🔱</div>
+    <div class="msg-content" style="padding:12px 16px">
+      <div class="typing">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+  `
+  msgs.appendChild(div)
+  msgs.scrollTop = msgs.scrollHeight
+  return id
+}
+
+function removeTyping(id) {
+  document.getElementById(id)?.remove()
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>')
+    .replace(/`([^`]+)`/g,'<code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-family:monospace">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+}
+
+// ── Memory Stats ───────────────────────────────────────────────────────────
+async function updateMemoryStats() {
+  try {
+    const r = await fetch(`${BACKEND}/health`).then(r => r.json())
+    document.getElementById('mem-status').textContent = '🟢 online'
+    document.getElementById('mem-status').style.color = '#00ff88'
+    document.getElementById('mem-short').textContent = msgHistory.length
+  } catch {
+    document.getElementById('mem-status').textContent = '🔴 offline'
+    document.getElementById('mem-status').style.color = '#ff4500'
+    document.getElementById('mem-short').textContent = msgHistory.length
+  }
+}
+
+// ── Input keyboard ─────────────────────────────────────────────────────────
+document.getElementById('user-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
 })
+
+// ── Init ───────────────────────────────────────────────────────────────────
+updateMemoryStats()
+setInterval(updateMemoryStats, 10000)
 </script>
 </body>
 </html>
