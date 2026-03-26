@@ -1,0 +1,9 @@
+# Exclude evaluation artifacts and outputs
+outputs/
+grading.json
+benchmark.json
+benchmark.md
+timing.json
+eval_metadata.json
+*.output
+*.log

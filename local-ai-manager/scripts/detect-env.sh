@@ -55,7 +55,7 @@ else
 fi
 
 # LocalAI (Docker)
-if docker ps --format '{{.Names}}' | grep -q localai; then
+if command -v docker &> /dev/null && docker ps --format '{{.Names}}' 2>/dev/null | grep -q localai; then
     echo "✓ LocalAI running in Docker"
     echo "  Endpoint: $(docker ps --filter name=localai --format '{{.Ports}}')"
 else

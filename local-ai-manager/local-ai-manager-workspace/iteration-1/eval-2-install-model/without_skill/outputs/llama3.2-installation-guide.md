@@ -183,7 +183,7 @@ print(response.choices[0].message.content)
 ### Optimal Settings
 
 ```yaml
-# For Ollama modelfile
+# For Ollama Modelfile
 PARAMETER temperature 0.7
 PARAMETER top_p 0.9
 PARAMETER num_ctx 8192

@@ -10,6 +10,12 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+# Ensure required dependencies are available before running benchmarks
+if ! command -v ollama >/dev/null 2>&1; then
+    echo "Error: 'ollama' is not installed or not in PATH. Please install/configure ollama before running this benchmark."
+    exit 1
+fi
+
 MODEL=$1
 PROMPT=${2:-"Hello, how are you?"}
 TIMES=3

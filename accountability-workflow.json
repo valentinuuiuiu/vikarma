@@ -1,0 +1,110 @@
+{
+  "name": "Vikarma-Accountability-Saga",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "accountability-log",
+        "options": {}
+      },
+      "id": "node_id_10",
+      "name": "Goal Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 400]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "goal-id",
+              "name": "goal",
+              "value": "={{ $json.body.goal }}",
+              "type": "string"
+            },
+            {
+              "id": "status-id",
+              "name": "status",
+              "value": "in_progress",
+              "type": "string"
+            },
+            {
+              "id": "ts-id",
+              "name": "timestamp",
+              "value": "={{ $now.toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_id_11",
+      "name": "Set Goal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [220, 400]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "fileContent": "={{ $json.goal }} | {{ $json.status }} | {{ $json.timestamp }}\\n",
+        "fileName": "/home/node/.n8n/accountability.log"
+      },
+      "id": "node_id_12",
+      "name": "Log to File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [440, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "allContext",
+        "options": {}
+      },
+      "id": "node_id_13",
+      "name": "Respond Goal",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [660, 400]
+    }
+  ],
+  "connections": {
+    "Goal Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Goal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Goal": {
+      "main": [
+        [
+          {
+            "node": "Log to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to File": {
+      "main": [
+        [
+          {
+            "node": "Respond Goal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

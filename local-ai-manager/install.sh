@@ -21,12 +21,16 @@ mkdir -p "$HOME/.claude/plugins"
 
 # Copy skill files
 echo "Installing skill to $SKILL_DIR..."
-mkdir -p "$SKILL_DIR"
-cp -r "$(dirname "$0")/SKILL.md" "$SKILL_DIR/" 2>/dev/null || {
+# If running from a local directory, copy everything
+if [ -f "$(dirname "$0")/SKILL.md" ]; then
+    mkdir -p "$SKILL_DIR"
+    cp -r "$(dirname "$0")"/* "$SKILL_DIR/"
+else
     # If not running from local dir, download
     echo "Downloading from remote..."
+    mkdir -p "$HOME/.claude/plugins/"
     curl -fsSL "$SKILL_URL" | tar -xzf - -C "$HOME/.claude/plugins/"
-}
+fi
 
 # Make scripts executable
 chmod +x "$SKILL_DIR/scripts/"*.sh 2>/dev/null || true

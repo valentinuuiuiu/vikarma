@@ -15,7 +15,7 @@
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
     "dist:all": "electron-builder --linux --win --mac",
-    "server": "python3 server/main.py",
+    "server": "./venv/bin/python server/main.py",
     "temples": "python3 server/mcp/nexus_orchestrator.py awaken"
   },
   "dependencies": {

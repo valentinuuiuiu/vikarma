@@ -54,7 +54,7 @@ After installation, test with these queries:
 | "Install llama3.2 for coding" | Provides Ollama install commands, model recommendations |
 | "OOM error with RTX 3060" | Suggests smaller models, quantization, CPU offload |
 
-## Files Structure
+## File Structure
 
 ```
 local-ai-manager/
