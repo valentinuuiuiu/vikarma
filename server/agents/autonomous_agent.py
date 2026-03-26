@@ -90,6 +90,7 @@ class VikarmaAgent:
         messages = history + [{"role": "user", "content": task}]
         iterations = 0
         final_response = ""
+        response = ""
 
         if stream_callback:
             await stream_callback({"type": "start", "task": task})
@@ -234,7 +235,7 @@ class VikarmaAgent:
                 import anthropic
                 client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
                 r = await client.messages.create(
-                    model="claude-sonnet-4-20250514",
+                    model="claude-sonnet-4-6",
                     max_tokens=4096,
                     system=system,
                     messages=messages
