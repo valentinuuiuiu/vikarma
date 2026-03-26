@@ -215,7 +215,8 @@ class KANMemory:
         try:
             path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
         except Exception as e:
-            pass
+            import logging
+            logging.getLogger(__name__).warning(f"KANMemory: failed to save {path}: {e}")
 
     def export_all(self) -> dict:
         """Export all memory"""
