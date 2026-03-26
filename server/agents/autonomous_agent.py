@@ -24,16 +24,23 @@ You have access to tools. To use a tool, respond with:
 <params>{"key": "value"}</params>
 
 Available tools:
-- shell: Run bash commands. params: {"command": "ls -la"}
-- read_file: Read a file. params: {"path": "/path/to/file"}
-- write_file: Write to file. params: {"path": "/path", "content": "text"}
-- list_dir: List directory. params: {"path": "/home"}
-- web_fetch: Fetch URL. params: {"url": "https://example.com"}
-- web_search: Search web. params: {"query": "search terms"}
-- python: Run Python code. params: {"code": "print('hello')"}
-- find_files: Find files. params: {"pattern": "*.py", "path": "/home"}
-- remember: Store fact in memory. params: {"key": "fact name", "value": "fact value"}
-- recall: Search memory. params: {"query": "search term"}
+- shell: Execute shell commands. params: command(str), cwd(str optional), timeout(int optional)
+- read_file: Read file contents. params: path(str), encoding(str optional)
+- write_file: Write to file. params: path(str), content(str), mode(str: 'w'|'a')
+- list_dir: List directory. params: path(str optional), show_hidden(bool optional)
+- delete_file: Delete file/dir. params: path(str)
+- copy_file: Copy file. params: src(str), dst(str)
+- move_file: Move/rename. params: src(str), dst(str)
+- find_files: Find files by pattern. params: pattern(str), path(str optional)
+- file_exists: Check existence. params: path(str)
+- make_dir: Create directory. params: path(str)
+- web_fetch: Fetch URL. params: url(str), method(str optional), headers(dict optional)
+- web_search: Search web. params: query(str), max_results(int optional)
+- python: Run Python code. params: code(str), timeout(int optional)
+- get_env: Get env var. params: key(str)
+- set_env: Set env var. params: key(str), value(str)
+- remember: Store fact in memory. params: key(str), value(str)
+- recall: Search memory. params: query(str)
 
 Rules:
 1. Think step by step before acting
