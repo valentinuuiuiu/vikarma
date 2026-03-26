@@ -1,0 +1,22 @@
+{
+  "eval_id": 1,
+  "eval_name": "gpu-detection",
+  "prompt": "Check what local AI models I have installed and show me my GPU setup",
+  "assertions": [
+    {
+      "name": "detects_gpu",
+      "description": "Response mentions GPU detection or nvidia-smi output",
+      "check": "response_contains_gpu_info"
+    },
+    {
+      "name": "lists_models",
+      "description": "Response lists installed models or backend status",
+      "check": "response_lists_ai_backends"
+    },
+    {
+      "name": "actionable",
+      "description": "Provides actionable next steps or commands",
+      "check": "response_has_commands"
+    }
+  ]
+}

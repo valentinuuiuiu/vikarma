@@ -1,0 +1,35 @@
+{
+  "skill_name": "local-ai-manager",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check what local AI models I have installed and show me my GPU setup",
+      "expected_output": "Detects GPU (NVIDIA detected via nvidia-smi), lists Ollama models (running on port 11434), shows backend status",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I want to install llama3.2 locally for coding assistance. My system has an RTX 4090 with 24GB VRAM",
+      "expected_output": "Recommends Ollama for easy setup, provides install commands, suggests codellama or llama3.2, configures GPU layers for 4090",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Compare the speed of llama3.2 q4_0 vs q8_0 quantization on my system",
+      "expected_output": "Uses benchmark script or provides comparison commands, explains quantization trade-offs, shows how to pull both versions",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Set up n8n to use my local Ollama instance for a chat workflow",
+      "expected_output": "Provides n8n HTTP Request node configuration for Ollama API (localhost:11434), shows chat endpoint setup",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I'm getting 'out of memory' errors with llama3.2 70B on my RTX 3060 (12GB). How can I fix this?",
+      "expected_output": "Suggests smaller model, quantization (q4_0), reduced context window, or offloading fewer layers to GPU",
+      "files": []
+    }
+  ]
+}

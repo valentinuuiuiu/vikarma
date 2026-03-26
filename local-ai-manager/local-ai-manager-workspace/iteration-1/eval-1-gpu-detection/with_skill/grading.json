@@ -1,0 +1,24 @@
+{
+  "run_id": "eval-1-with_skill",
+  "grading_results": [
+    {
+      "assertion": "detects_gpu",
+      "text": "Response mentions GPU detection or nvidia-smi output",
+      "passed": true,
+      "evidence": "Output includes GPU detection section with nvidia-smi command and detected NVIDIA GPU configuration"
+    },
+    {
+      "assertion": "lists_models",
+      "text": "Response lists installed models or backend status",
+      "passed": true,
+      "evidence": "Output includes Backend Detection table showing Ollama, llama.cpp, LocalAI, vLLM, NVIDIA NIM status"
+    },
+    {
+      "assertion": "actionable",
+      "text": "Provides actionable next steps or commands",
+      "passed": true,
+      "evidence": "Output includes Quick Commands section with specific commands: ollama list, nvidia-smi, curl localhost:8080"
+    }
+  ],
+  "overall_pass": true
+}

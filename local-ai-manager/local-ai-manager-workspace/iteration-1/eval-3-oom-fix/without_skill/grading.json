@@ -1,0 +1,30 @@
+{
+  "run_id": "eval-3-without_skill",
+  "grading_results": [
+    {
+      "assertion": "explains_oom_cause",
+      "text": "Explains why OOM occurs (model too large for VRAM)",
+      "passed": true,
+      "evidence": "Explains '70B parameter model requires significantly more memory' with table showing FP16 ~140GB vs 12GB VRAM"
+    },
+    {
+      "assertion": "suggests_quantization",
+      "text": "Recommends quantized models (q4_0, q8_0)",
+      "passed": true,
+      "evidence": "Includes 'Solution 3: Aggressive Quantization' with IQ2_XXS and specific llama.cpp commands"
+    },
+    {
+      "assertion": "suggests_smaller_model",
+      "text": "Suggests smaller model or reduced context",
+      "passed": true,
+      "evidence": "Provides 'Solution 2: Use a Smaller Model' with table of suitable models for 12GB VRAM"
+    },
+    {
+      "assertion": "provides_commands",
+      "text": "Includes specific commands to try",
+      "passed": true,
+      "evidence": "Includes Ollama commands with OLLAMA_NUM_GPU tuning, llama.cpp commands, and context window reduction"
+    }
+  ],
+  "overall_pass": true
+}
