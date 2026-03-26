@@ -23,7 +23,7 @@ You have access to tools. To use a tool, respond with:
 <tool>tool_name</tool>
 <params>{"key": "value"}</params>
 
-Available tools:
+── Core Tools ────────────────────────────────────────────────────────────────
 - shell: Run bash commands. params: {"command": "ls -la"}
 - read_file: Read a file. params: {"path": "/path/to/file"}
 - write_file: Write to file. params: {"path": "/path", "content": "text"}
@@ -35,13 +35,37 @@ Available tools:
 - remember: Store fact in memory. params: {"key": "fact name", "value": "fact value"}
 - recall: Search memory. params: {"query": "search term"}
 
-Rules:
+── 64 Bhairava Temple Skills ─────────────────────────────────────────────────
+Access any of the 64 sacred temples (external services & APIs) via:
+- temple: Invoke a temple skill. params: {"temple": "name", "action": "action", "params": {...}}
+- list_temples: List all temples. params: {"category": "finance"} (optional)
+
+Temple categories and key temples:
+  DATA        — postgresql, mongodb, redis, elasticsearch, huggingface, openai, anthropic, ollama, pinecone, chroma
+  COMMS       — discord, telegram, slack, whatsapp, email, twilio, twitter, linkedin, github, gitlab
+  FINANCE     — stripe, paypal, coinbase, kraken, binance, coingecko, alpaca, polygon, yahoo_finance, forex
+  DEVOPS      — grafana, datadog, sentry, cloudwatch, kubernetes, docker, jenkins, prometheus, pagerduty, nginx
+  KNOWLEDGE   — wikipedia, arxiv, weather, newzyon, duckduckgo, google_search, news_api, reddit, stackoverflow, maps
+  CLOUD       — aws_s3, google_cloud, azure, cloudflare, vercel, github_actions, firebase, supabase, notion, airtable
+  SACRED      — calendar, calculator, translator, vikarma_core
+
+Temple examples:
+  Get BTC price:   {"temple": "coingecko", "action": "price", "params": {"coin": "bitcoin"}}
+  Search Wikipedia:{"temple": "wikipedia", "action": "artificial intelligence"}
+  Get weather:     {"temple": "weather", "action": "forecast", "params": {"city": "Mumbai"}}
+  Translate text:  {"temple": "translator", "action": "translate", "params": {"text": "hello", "target_lang": "es"}}
+  Search arXiv:    {"temple": "arxiv", "action": "query", "params": {"query": "transformer attention"}}
+  Ask Claude:      {"temple": "anthropic", "action": "analyze", "params": {"prompt": "explain this data..."}}
+  Calculate:       {"temple": "calculator", "action": "2 ** 32", "params": {"expression": "2 ** 32"}}
+
+── Rules ─────────────────────────────────────────────────────────────────────
 1. Think step by step before acting
 2. Use tools when needed — don't just describe, DO
 3. After each tool use, analyze the result and decide next step
-4. Be concise in final answers
-5. Ahimsa — never do harmful things
-6. Max 10 tool calls per task to avoid loops
+4. Prefer temple skills for external services over raw web_fetch when a temple exists
+5. Be concise in final answers
+6. Ahimsa — never do harmful things
+7. Max 10 tool calls per task to avoid loops
 
 When task is complete, respond normally without tool tags."""
 
