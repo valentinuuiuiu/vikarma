@@ -1,0 +1,30 @@
+{
+  "run_id": "eval-3-with_skill",
+  "grading_results": [
+    {
+      "assertion": "explains_oom_cause",
+      "text": "Explains why OOM occurs (model too large for VRAM)",
+      "passed": true,
+      "evidence": "Clearly explains '70B model requires approximately 35-40GB minimum, which far exceeds your hardware capacity' with VRAM table"
+    },
+    {
+      "assertion": "suggests_quantization",
+      "text": "Recommends quantized models (q4_0, q8_0)",
+      "passed": true,
+      "evidence": "Provides 'Solution 1: Use a Smaller Model' and 'Solution 2: Aggressive Quantization' sections with Q4_0, Q8_0 options"
+    },
+    {
+      "assertion": "suggests_smaller_model",
+      "text": "Suggests smaller model or reduced context",
+      "passed": true,
+      "evidence": "Lists recommended models table: Llama 3.2 3B, Llama 3.1 8B, Mistral 7B with exact VRAM requirements"
+    },
+    {
+      "assertion": "provides_commands",
+      "text": "Includes specific commands to try",
+      "passed": true,
+      "evidence": "Provides 'Quick Fix Commands', 'Check VRAM Usage', and specific ollama pull commands"
+    }
+  ],
+  "overall_pass": true
+}

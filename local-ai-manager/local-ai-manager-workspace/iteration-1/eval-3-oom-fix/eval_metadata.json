@@ -1,0 +1,27 @@
+{
+  "eval_id": 3,
+  "eval_name": "oom-fix",
+  "prompt": "I'm getting 'out of memory' errors with llama3.2 70B on my RTX 3060 (12GB). How can I fix this?",
+  "assertions": [
+    {
+      "name": "explains_oom_cause",
+      "description": "Explains why OOM occurs (model too large for VRAM)",
+      "check": "response_explains_memory_issue"
+    },
+    {
+      "name": "suggests_quantization",
+      "description": "Recommends quantized models (q4_0, q8_0)",
+      "check": "response_suggests_quantization"
+    },
+    {
+      "name": "suggests_smaller_model",
+      "description": "Suggests smaller model or reduced context",
+      "check": "response_suggests_alternatives"
+    },
+    {
+      "name": "provides_commands",
+      "description": "Includes specific commands to try",
+      "check": "response_has_commands"
+    }
+  ]
+}

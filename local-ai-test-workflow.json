@@ -1,0 +1,225 @@
+{
+  "name": "Local AI Manager - Test Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "start-node"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/tags",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "List Ollama Models",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300],
+      "id": "list-models"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/generate",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{$json.model || 'llama3.2'}}"
+            },
+            {
+              "name": "prompt",
+              "value": "Hello! Please introduce yourself briefly."
+            },
+            {
+              "name": "stream",
+              "value": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Test Model Inference",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300],
+      "id": "test-inference"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/show",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{$json.model || 'llama3.2'}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Get Model Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 500],
+      "id": "model-details"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/embeddings",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nomic-embed-text"
+            },
+            {
+              "name": "prompt",
+              "value": "This is a test embedding for the local AI workflow."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Test Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 500],
+      "id": "test-embeddings"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/chat",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{$json.model || 'llama3.2'}}"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"user\", \"content\": \"What is 2+2? Reply with just the number.\"}]"
+            },
+            {
+              "name": "stream",
+              "value": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Chat Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 300],
+      "id": "chat-completion"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate all results\nconst models = $input.all()[0].json.models || [];\nconst inferenceResult = $input.all()[1]?.json?.response || 'No response';\nconst chatResult = $input.all()[2]?.json?.message?.content || 'No chat response';\nconst modelDetails = $input.all()[3]?.json || {};\n\nreturn {\n  json: {\n    summary: {\n      totalModels: models.length,\n      models: models.map(m => m.name),\n      inferenceTest: inferenceResult.substring(0, 200),\n      chatTest: chatResult,\n      inferenceWorking: inferenceResult.length > 0,\n      chatWorking: chatResult.length > 0\n    },\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 400],
+      "id": "aggregate"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "List Ollama Models",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Model Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Ollama Models": {
+      "main": [
+        [
+          {
+            "node": "Test Model Inference",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Model Inference": {
+      "main": [
+        [
+          {
+            "node": "Chat Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Model Details": {
+      "main": [
+        [
+          {
+            "node": "Test Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Completion": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Local AI",
+      "createdAt": "2026-03-26T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-03-26T12:50:00.000Z",
+  "versionId": "1"
+}
