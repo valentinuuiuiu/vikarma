@@ -314,4 +314,4 @@ class TestTempleGatewayRouting:
     @pytest.mark.asyncio
     async def test_total_temple_count_is_66(self, gw):
         result = await gw.execute("list_temples", {})
-        assert result["total"] == 66
+        assert result["total"] == 67

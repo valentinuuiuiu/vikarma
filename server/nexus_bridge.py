@@ -113,6 +113,8 @@ TEMPLE_PORTS = {
     # ── Blockchain Oracles & Infrastructure (9085–9086) ──────────────────
     "chainlink":       9085,  # Temple 65 — Chainlink price oracle feeds
     "alchemy":         9086,  # Temple 66 — Alchemy blockchain APIs
+    # ── Avatar && Multimodal (9087) ────────────────────────────────────────
+    "gemini_avatar":   9087,  # Temple 67 — Gemini Avatar Node (vision+think+stream)
 }
 
 # Human-readable skill descriptions for the agent system prompt
@@ -189,6 +191,7 @@ TEMPLE_SKILL_DESCRIPTIONS = {
     "vikarma_core":  "Vikarma self-reference and meta-cognition",
     "chainlink":     "Chainlink on-chain price oracles — BTC/ETH/SOL/LINK/forex/commodities",
     "alchemy":       "Alchemy blockchain API — balances, tokens, NFTs, transfers, gas, simulation",
+    "gemini_avatar": "Gemini Avatar Node — vision, thinking, streaming, embeddings (Temple 67)",
 }
 
 VIKARMA_BACKEND = "http://127.0.0.1:8765"
@@ -371,6 +374,11 @@ class NexusBridge:
                                         "block", "gas", "tx", "receipt", "price",
                                         "wallet", "is_contract", "networks"]}
             return {"temple": temple, "action": action, "result": result}
+
+        # Gemini Avatar Node — multimodal live agent
+        if temple == "gemini_avatar":
+            from server.integrations.gemini_avatar import get_gemini_avatar
+            return await get_gemini_avatar().dispatch(action, params)
 
         return {
             "temple": temple,
