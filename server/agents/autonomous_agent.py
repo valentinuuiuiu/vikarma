@@ -48,6 +48,7 @@ Temple categories and key temples:
   KNOWLEDGE   — wikipedia, arxiv, weather, newzyon, duckduckgo, google_search, news_api, reddit, stackoverflow, maps
   CLOUD       — aws_s3, google_cloud, azure, cloudflare, vercel, github_actions, firebase, supabase, notion, airtable
   SACRED      — calendar, calculator, translator, vikarma_core
+  BLOCKCHAIN  — chainlink, alchemy
 
 Temple examples:
   Get BTC price:   {"temple": "coingecko", "action": "price", "params": {"coin": "bitcoin"}}
@@ -57,6 +58,11 @@ Temple examples:
   Search arXiv:    {"temple": "arxiv", "action": "query", "params": {"query": "transformer attention"}}
   Ask Claude:      {"temple": "anthropic", "action": "analyze", "params": {"prompt": "explain this data..."}}
   Calculate:       {"temple": "calculator", "action": "2 ** 32", "params": {"expression": "2 ** 32"}}
+  ETH oracle price:{"temple": "chainlink", "action": "ETH/USD"}
+  BTC oracle price:{"temple": "chainlink", "action": "multi", "params": {"pairs": ["BTC/USD", "ETH/USD"]}}
+  Wallet balance:  {"temple": "alchemy", "action": "balance", "params": {"address": "0xAbCd...", "network": "ethereum"}}
+  Token balances:  {"temple": "alchemy", "action": "tokens", "params": {"address": "0xAbCd..."}}
+  Gas price:       {"temple": "alchemy", "action": "gas", "params": {"network": "ethereum"}}
 
 ── Rules ─────────────────────────────────────────────────────────────────────
 1. Think step by step before acting
