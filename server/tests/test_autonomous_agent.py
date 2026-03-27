@@ -11,8 +11,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from server.agents.autonomous_agent import VikarmaAgent, AGENT_SYSTEM_PROMPT
+from server.agents.autonomous_agent import VikarmaAgent, AGENT_SYSTEM_PROMPT, AIResult, ToolCall, TOOL_SCHEMAS
 from server.agents.kan_memory import KANMemory
+
+
+def ai_result(text="", tool_calls=None):
+    """Helper: build AIResult from text (parses XML tags) or plain text."""
+    agent = VikarmaAgent(AsyncMock(), MagicMock())
+    calls = [ToolCall(name=n, params=p, call_id=f"t{i}") for i, (n, p) in enumerate(agent._parse_tool_calls(text))]
+    return AIResult(text=text, tool_calls=calls or (tool_calls or []))
 
 
 # ── Fixtures ───────────────────────────────────────────────────────────────────
@@ -24,12 +31,10 @@ def mem(tmp_path):
 
 def make_agent(ai_response, mem, tool_result=None):
     """Build agent with mocked AI and tool gateway."""
-    mock_ai = AsyncMock(return_value=ai_response)
     mock_tools = MagicMock()
     mock_tools.execute = AsyncMock(return_value=tool_result or {"stdout": "ok", "returncode": 0, "success": True})
-    agent = VikarmaAgent(ai_provider=mock_ai, tool_gateway=mock_tools, memory=mem)
-    # Patch _call_ai to use our mock directly
-    agent._call_ai = AsyncMock(return_value=ai_response)
+    agent = VikarmaAgent(ai_provider=AsyncMock(), tool_gateway=mock_tools, memory=mem)
+    agent._call_ai = AsyncMock(return_value=ai_result(ai_response))
     return agent
 
 
@@ -158,7 +163,7 @@ class TestAgentRun:
     async def test_simple_response_no_tools(self, mem):
         """Agent returns final answer when AI gives no tool calls."""
         agent = VikarmaAgent(AsyncMock(), MagicMock(), mem)
-        agent._call_ai = AsyncMock(return_value="Hello, I'm Tvaṣṭā!")
+        agent._call_ai = AsyncMock(return_value=ai_result("Hello, I'm Tvaṣṭā!"))
         result = await agent.run("Say hello")
         assert result == "Hello, I'm Tvaṣṭā!"
 
@@ -172,7 +177,7 @@ class TestAgentRun:
         mock_tools.execute = AsyncMock(return_value={"stdout": "hi\n", "stderr": "", "returncode": 0, "success": True})
 
         agent = VikarmaAgent(AsyncMock(), mock_tools, mem)
-        agent._call_ai = AsyncMock(side_effect=[tool_response, final_response])
+        agent._call_ai = AsyncMock(side_effect=[ai_result(tool_response), ai_result(final_response)])
 
         result = await agent.run("Run echo hi")
         assert result == final_response
@@ -187,7 +192,7 @@ class TestAgentRun:
         mock_tools = MagicMock()
         mock_tools.execute = AsyncMock()
         agent = VikarmaAgent(AsyncMock(), mock_tools, mem)
-        agent._call_ai = AsyncMock(side_effect=[remember_call, final])
+        agent._call_ai = AsyncMock(side_effect=[ai_result(remember_call), ai_result(final)])
 
         await agent.run("Remember the user is Bob")
         # Tool gateway should NOT have been called for remember
@@ -206,7 +211,7 @@ class TestAgentRun:
         mock_tools = MagicMock()
         mock_tools.execute = AsyncMock()
         agent = VikarmaAgent(AsyncMock(), mock_tools, mem)
-        agent._call_ai = AsyncMock(side_effect=[recall_call, final])
+        agent._call_ai = AsyncMock(side_effect=[ai_result(recall_call), ai_result(final)])
 
         result = await agent.run("What is the capital?")
         assert result == final
@@ -222,7 +227,7 @@ class TestAgentRun:
         mock_tools.execute = AsyncMock(return_value={"stdout": "loop\n", "stderr": "", "returncode": 0, "success": True})
 
         agent = VikarmaAgent(AsyncMock(), mock_tools, mem)
-        agent._call_ai = AsyncMock(return_value=tool_call)
+        agent._call_ai = AsyncMock(return_value=ai_result(tool_call))
 
         result = await agent.run("Infinite loop task")
         assert "max iterations" in result.lower() or "⚠️" in result
@@ -238,7 +243,7 @@ class TestAgentRun:
         mock_tools.execute = AsyncMock(return_value={"stdout": "Thu\n", "stderr": "", "returncode": 0, "success": True})
 
         agent = VikarmaAgent(AsyncMock(), mock_tools, mem)
-        agent._call_ai = AsyncMock(side_effect=[tool_call, final])
+        agent._call_ai = AsyncMock(side_effect=[ai_result(tool_call), ai_result(final)])
 
         events = []
 
@@ -257,7 +262,7 @@ class TestAgentRun:
     async def test_run_stores_in_memory(self, mem):
         """Task and response are stored in short-term memory."""
         agent = VikarmaAgent(AsyncMock(), MagicMock(), mem)
-        agent._call_ai = AsyncMock(return_value="response text")
+        agent._call_ai = AsyncMock(return_value=ai_result("response text"))
 
         await agent.run("user task")
         contents = [m["content"] for m in mem.short_term]
@@ -280,7 +285,7 @@ class TestRunStream:
         mock_tools = MagicMock()
         mock_tools.execute = AsyncMock()
         agent = VikarmaAgent(AsyncMock(), mock_tools, mem)
-        agent._call_ai = AsyncMock(return_value="Stream answer")
+        agent._call_ai = AsyncMock(return_value=ai_result("Stream answer"))
 
         events = []
         async for event in agent.run_stream("stream test"):
@@ -296,11 +301,12 @@ class TestRunStream:
 
 class TestSystemPrompt:
     def test_system_prompt_contains_tools(self):
-        assert "shell" in AGENT_SYSTEM_PROMPT
-        assert "read_file" in AGENT_SYSTEM_PROMPT
-        assert "web_search" in AGENT_SYSTEM_PROMPT
-        assert "remember" in AGENT_SYSTEM_PROMPT
-        assert "recall" in AGENT_SYSTEM_PROMPT
+        tool_names = {t["function"]["name"] for t in TOOL_SCHEMAS}
+        assert "shell" in tool_names
+        assert "read_file" in tool_names
+        assert "web_search" in tool_names
+        assert "remember" in tool_names
+        assert "recall" in tool_names
 
     def test_system_prompt_contains_rules(self):
         assert "Ahimsa" in AGENT_SYSTEM_PROMPT
