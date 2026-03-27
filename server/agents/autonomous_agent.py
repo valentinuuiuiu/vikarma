@@ -97,7 +97,7 @@ class VikarmaAgent:
 
     def set_provider(self, provider: str):
         """Set AI provider. Options: claude, openai, deepseek, qwen, grok,
-        minimax, gemini, copilot, ollama"""
+        minimax, gemini, copilot, ollama, kimi, qwen3"""
         self.provider = provider
 
     # ── Main agent loop ────────────────────────────────────────────────────
@@ -284,6 +284,8 @@ class VikarmaAgent:
                     "gemini": {"key": os.getenv("GEMINI_API_KEY"), "base": "https://generativelanguage.googleapis.com/v1beta/openai", "model": "gemini-2.0-flash-preview"},
                     "copilot": {"key": os.getenv("GITHUB_COPILOT_TOKEN"), "base": "https://api.githubcopilot.com", "model": "gpt-4o"},
                     "ollama": {"key": "ollama", "base": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"), "model": os.getenv("OLLAMA_MODEL", "minimax-m2.7:cloud")},
+                    "kimi": {"key": "ollama", "base": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"), "model": "kimi-k2.5:cloud"},
+                    "qwen3": {"key": "ollama", "base": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"), "model": "qwen3.5:cloud"},
                 }
                 cfg = configs.get(self.provider, configs["openai"])
                 client = AsyncOpenAI(api_key=cfg["key"], base_url=cfg.get("base"))
