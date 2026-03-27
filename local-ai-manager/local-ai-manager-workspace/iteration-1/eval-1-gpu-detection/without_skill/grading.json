@@ -1,0 +1,24 @@
+{
+  "run_id": "eval-1-without_skill",
+  "grading_results": [
+    {
+      "assertion": "detects_gpu",
+      "text": "Response mentions GPU detection or nvidia-smi output",
+      "passed": false,
+      "evidence": "Output explains commands that WOULD be run but did not execute due to permission denial"
+    },
+    {
+      "assertion": "lists_models",
+      "text": "Response lists installed models or backend status",
+      "passed": false,
+      "evidence": "Output only lists commands to check models, does not show actual installed models"
+    },
+    {
+      "assertion": "actionable",
+      "text": "Provides actionable next steps or commands",
+      "passed": true,
+      "evidence": "Output provides manual commands in 'How to Proceed' and 'Alternative: Manual Check' sections"
+    }
+  ],
+  "overall_pass": false
+}

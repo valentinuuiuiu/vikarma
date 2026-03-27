@@ -6,12 +6,15 @@ The sacred mind that never forgets.
 """
 
 import json
+import logging
 import os
 import time
 import hashlib
 from pathlib import Path
 from typing import Optional, Any
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class KANMemory:
@@ -215,7 +218,7 @@ class KANMemory:
         try:
             path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
         except Exception as e:
-            pass
+            logger.warning(f"KANMemory: failed to save {path}: {e}")
 
     def export_all(self) -> dict:
         """Export all memory"""

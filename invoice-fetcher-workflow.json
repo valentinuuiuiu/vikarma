@@ -1,0 +1,69 @@
+{
+  "name": "Vikarma-Invoice-Fetcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fetch-invoice",
+        "options": {}
+      },
+      "id": "node_id_20",
+      "name": "Fetch Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 600]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.url }}",
+        "options": {
+          "fullPage": true,
+          "windowSize": "1920x1080"
+        }
+      },
+      "id": "node_id_21",
+      "name": "Browser Screenshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [220, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "allContext",
+        "options": {}
+      },
+      "id": "node_id_22",
+      "name": "Respond Binary",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [440, 600]
+    }
+  ],
+  "connections": {
+    "Fetch Webhook": {
+      "main": [
+        [
+          {
+            "node": "Browser Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Browser Screenshot": {
+      "main": [
+        [
+          {
+            "node": "Respond Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

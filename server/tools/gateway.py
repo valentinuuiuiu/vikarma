@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Optional
 import httpx
 
+from server.nexus_bridge import NexusBridge
+
 
 class VikarmaToolGateway:
     """Sacred gateway for tool execution — powerful but Ahimsa-guided."""
@@ -23,6 +25,7 @@ class VikarmaToolGateway:
     def __init__(self, workspace: str = os.path.expanduser("~")):
         self.workspace = Path(workspace)
         self.history: list[dict] = []
+        self._nexus = NexusBridge()
 
     async def execute(self, tool: str, params: dict) -> dict:
         """Route to appropriate tool"""
@@ -42,6 +45,8 @@ class VikarmaToolGateway:
             "make_dir": self.make_dir,
             "get_env": self.get_env,
             "set_env": self.set_env,
+            "temple": self.call_temple,
+            "list_temples": self.list_temples,
         }
         handler = handlers.get(tool)
         if not handler:
@@ -254,6 +259,17 @@ class VikarmaToolGateway:
         os.environ[key] = value
         return {"success": True, "key": key}
 
+    # ── BHAIRAVA TEMPLES ───────────────────────────────────────────────────
+
+    async def call_temple(self, temple: str, action: str, params: dict = None) -> dict:
+        """Invoke any of the 64 Bhairava Temple skills via the Nexus Bridge."""
+        return await self._nexus.call_temple(temple, action, params or {})
+
+    async def list_temples(self, category: str = None) -> dict:
+        """List all 64 Bhairava Temples with descriptions."""
+        temples = self._nexus.list_temples(category=category)
+        return {"temples": temples, "total": len(temples)}
+
     # ── HELPERS ────────────────────────────────────────────────────────────
 
     def _resolve(self, path: str) -> Path:
@@ -272,19 +288,21 @@ class VikarmaToolGateway:
 # ── Tool descriptions for AI context ──────────────────────────────────────────
 
 TOOL_DESCRIPTIONS = {
-    "shell": "Execute shell commands. params: command(str), cwd(str optional), timeout(int optional)",
-    "read_file": "Read file contents. params: path(str), encoding(str optional)",
-    "write_file": "Write to file. params: path(str), content(str), mode(str: 'w'|'a')",
-    "list_dir": "List directory. params: path(str optional), show_hidden(bool optional)",
-    "delete_file": "Delete file/dir. params: path(str)",
-    "copy_file": "Copy file. params: src(str), dst(str)",
-    "move_file": "Move/rename. params: src(str), dst(str)",
-    "find_files": "Find files by pattern. params: pattern(str), path(str optional)",
-    "file_exists": "Check existence. params: path(str)",
-    "make_dir": "Create directory. params: path(str)",
-    "web_fetch": "Fetch URL. params: url(str), method(str optional), headers(dict optional)",
-    "web_search": "Search web. params: query(str), max_results(int optional)",
-    "python": "Run Python code. params: code(str), timeout(int optional)",
-    "get_env": "Get env var. params: key(str)",
-    "set_env": "Set env var. params: key(str), value(str)",
+    "shell":        "Execute shell commands. params: command(str), cwd(str optional), timeout(int optional)",
+    "read_file":    "Read file contents. params: path(str), encoding(str optional)",
+    "write_file":   "Write to file. params: path(str), content(str), mode(str: 'w'|'a')",
+    "list_dir":     "List directory. params: path(str optional), show_hidden(bool optional)",
+    "delete_file":  "Delete file/dir. params: path(str)",
+    "copy_file":    "Copy file. params: src(str), dst(str)",
+    "move_file":    "Move/rename. params: src(str), dst(str)",
+    "find_files":   "Find files by pattern. params: pattern(str), path(str optional)",
+    "file_exists":  "Check existence. params: path(str)",
+    "make_dir":     "Create directory. params: path(str)",
+    "web_fetch":    "Fetch URL. params: url(str), method(str optional), headers(dict optional)",
+    "web_search":   "Search web. params: query(str), max_results(int optional)",
+    "python":       "Run Python code. params: code(str), timeout(int optional)",
+    "get_env":      "Get env var. params: key(str)",
+    "set_env":      "Set env var. params: key(str), value(str)",
+    "temple":       "Invoke a Bhairava Temple skill. params: temple(str), action(str), params(dict optional)",
+    "list_temples": "List all 64 Bhairava Temples. params: category(str optional: data|communication|finance|devops|knowledge|cloud|sacred)",
 }

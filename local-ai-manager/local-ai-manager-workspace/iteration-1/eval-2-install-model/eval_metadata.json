@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "install-model",
+  "prompt": "I want to install llama3.2 locally for coding assistance. My system has an RTX 4090 with 24GB VRAM",
+  "assertions": [
+    {
+      "name": "recommends_backend",
+      "description": "Recommends a specific backend (Ollama, llama.cpp, etc.)",
+      "check": "response_recommends_backend"
+    },
+    {
+      "name": "provides_install_commands",
+      "description": "Includes installation commands",
+      "check": "response_has_install_commands"
+    },
+    {
+      "name": "gpu_specific_config",
+      "description": "Provides GPU-specific configuration for RTX 4090",
+      "check": "response_has_gpu_config"
+    },
+    {
+      "name": "mentions_coding_models",
+      "description": "Suggests coding-focused models (codellama, etc.)",
+      "check": "response_mentions_coding_models"
+    }
+  ]
+}

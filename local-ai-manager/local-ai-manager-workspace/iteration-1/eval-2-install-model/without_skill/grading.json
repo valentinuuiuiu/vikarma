@@ -1,0 +1,30 @@
+{
+  "run_id": "eval-2-without_skill",
+  "grading_results": [
+    {
+      "assertion": "recommends_backend",
+      "text": "Recommends a specific backend (Ollama, llama.cpp, etc.)",
+      "passed": true,
+      "evidence": "Recommends 'Option 1: Ollama (Recommended - Easiest)' with clear explanation"
+    },
+    {
+      "assertion": "provides_install_commands",
+      "text": "Includes installation commands",
+      "passed": true,
+      "evidence": "Provides multiple installation methods: Ollama curl, LM Studio, Hugging Face Transformers, vLLM"
+    },
+    {
+      "assertion": "gpu_specific_config",
+      "text": "Provides GPU-specific configuration for RTX 4090",
+      "passed": true,
+      "evidence": "Includes 'Configuration Tips for RTX 4090' section with optimal settings and quantization options"
+    },
+    {
+      "assertion": "mentions_coding_models",
+      "text": "Suggests coding-focused models (codellama, etc.)",
+      "passed": true,
+      "evidence": "Includes integration with Continue.dev and Aider for coding, mentions llama3.2:3b-instruct for coding"
+    }
+  ],
+  "overall_pass": true
+}

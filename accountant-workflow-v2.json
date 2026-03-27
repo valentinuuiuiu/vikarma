@@ -1,0 +1,139 @@
+{
+  "name": "Vikarma-Multimodal-Accountant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-vision",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/generate",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama3.2-vision"
+            },
+            {
+              "name": "prompt",
+              "value": "Extract all line items, quantities, and prices from this invoice. Return as a JSON array of objects: {item, qty, price}. Also extract the vendor name and total."
+            },
+            {
+              "name": "images",
+              "value": "={{ $binary.data.data }}"
+            },
+            {
+              "name": "stream",
+              "value": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "vision-extractor",
+      "name": "Ollama Vision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "functionCode": "const response = $input.all()[0].json.response;\ntry {\n  const data = JSON.parse(response.match(/\\{.*\\}/s)[0]);\n  return { json: data };\n} catch (e) {\n  return { json: { raw: response, error: \"Failed to parse JSON\" } };\n}"
+      },
+      "id": "json-parser",
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "resource": "workflow",
+        "operation": "get",
+        "workflowId": "={{ $workflow.id }}"
+      },
+      "id": "saga-log",
+      "name": "Saga Log",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "allContext",
+        "options": {}
+      },
+      "id": "return-to-webui",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [880, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ollama Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Vision": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response": {
+      "main": [
+        [
+          {
+            "node": "Saga Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saga Log": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateId": "multimodal-accountant-v1"
+  },
+  "tags": ["accountant", "multimodal", "ollama"]
+}
