@@ -233,6 +233,10 @@ class VikarmaAgent:
 
             result = await self._call_ai(messages, system)
 
+            # Parse TOON/XML from text if no structured tool calls returned
+            if not result.tool_calls and result.text:
+                result.tool_calls = self._parse_toon(result.text) or self._parse_xml_tags(result.text)
+
             if not result.tool_calls:
                 final_response = result.text
                 self.memory.remember_now(result.text, role="assistant")
@@ -294,11 +298,17 @@ class VikarmaAgent:
     async def _call_ai(self, messages: list, system: str) -> AIResult:
         try:
             if self.provider == "claude":
-                return await self._call_anthropic(messages, system)
-            return await self._call_openai_compatible(messages, system)
+                result = await self._call_anthropic(messages, system)
+            else:
+                result = await self._call_openai_compatible(messages, system)
         except Exception as e:
             logger.error("AI call failed: %s", e)
             return AIResult(text=f"AI error: {e}")
+
+        # Universal TOON/XML fallback — parse tool calls from text if none found
+        if not result.tool_calls and result.text:
+            result.tool_calls = self._parse_toon(result.text) or self._parse_xml_tags(result.text)
+        return result
 
     async def _call_anthropic(self, messages: list, system: str) -> AIResult:
         import anthropic
