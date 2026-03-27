@@ -130,12 +130,31 @@ Rules:
 - Ahimsa — never do harmful things.
 - Max 10 tool calls per task.
 
-── XML Tag Format (Claude only) ──────────────────────────────────────────────
-When responding as Claude, you may also call tools using explicit XML tags:
-<tool>tool_name</tool>
-<params>{"key": "value"}</params>
+── TOON Format (Token Oriented Object Notation) ──────────────────────────────
+Call tools using Markdown fenced code blocks. Tool name after the colon.
+YAML body for params. One block per tool call.
 
-This creates a visible audit trail of every action. Use it."""
+```tool:shell
+command: ls -la /home
+```
+
+```tool:temple
+temple: coingecko
+action: price
+coin: bitcoin
+```
+
+```tool:remember
+key: user_name
+value: Ionut
+```
+
+```tool:web_search
+query: latest AI news
+```
+
+Also supported: XML tags as fallback.
+<tool>tool_name</tool><params>{"key": "value"}</params>"""
 
 
 @dataclass
@@ -299,9 +318,9 @@ class VikarmaAgent:
             elif block.type == "tool_use":
                 calls.append(ToolCall(name=block.name, params=block.input, call_id=block.id))
 
-        # Fallback: parse XML tags from text (Claude's visible audit trail format)
+        # Fallback: parse TOON blocks or XML tags from text
         if not calls and text:
-            calls = self._parse_xml_tags(text)
+            calls = self._parse_toon(text) or self._parse_xml_tags(text)
 
         return AIResult(text=text, tool_calls=calls)
 
@@ -319,9 +338,27 @@ class VikarmaAgent:
             calls.append(ToolCall(name=name.strip(), params=params, call_id=f"xml_{len(calls)}"))
         return calls
 
+    def _parse_toon(self, text: str) -> list[ToolCall]:
+        """Parse TOON Markdown fenced blocks: ```tool:name\\nYAML\\n```"""
+        import re
+        import yaml
+        calls = []
+        for i, (tool_name, body) in enumerate(re.findall(
+            r'```tool:(\w+)\n(.*?)```', text, re.DOTALL
+        )):
+            try:
+                params = yaml.safe_load(body.strip()) or {}
+                if not isinstance(params, dict):
+                    params = {"value": params}
+            except Exception:
+                params = {}
+            calls.append(ToolCall(name=tool_name.strip(), params=params, call_id=f"toon_{i}"))
+        return calls
+
     def _parse_tool_calls(self, text: str) -> list[tuple[str, dict]]:
-        """Backwards-compatible XML tag parser — returns (name, params) tuples."""
-        return [(tc.name, tc.params) for tc in self._parse_xml_tags(text)]
+        """Backwards-compatible parser — tries TOON first, then XML tags."""
+        calls = self._parse_toon(text) or self._parse_xml_tags(text)
+        return [(tc.name, tc.params) for tc in calls]
 
     def _format_tool_results(self, results: list[dict]) -> str:
         """Format tool results for display (legacy format used in tests)."""
