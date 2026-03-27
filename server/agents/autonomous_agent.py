@@ -96,6 +96,8 @@ class VikarmaAgent:
         self.provider = "claude"
 
     def set_provider(self, provider: str):
+        """Set AI provider. Options: claude, openai, deepseek, qwen, grok,
+        minimax, gemini, copilot, ollama"""
         self.provider = provider
 
     # ── Main agent loop ────────────────────────────────────────────────────
@@ -278,6 +280,10 @@ class VikarmaAgent:
                     "deepseek": {"key": os.getenv("DEEPSEEK_API_KEY"), "base": "https://api.deepseek.com/v1", "model": "deepseek-chat"},
                     "qwen": {"key": os.getenv("QWEN_API_KEY"), "base": "https://dashscope.aliyuncs.com/compatible-mode/v1", "model": "qwen-max"},
                     "grok": {"key": os.getenv("GROK_API_KEY"), "base": "https://api.x.ai/v1", "model": "grok-beta"},
+                    "minimax": {"key": os.getenv("MINIMAX_API_KEY"), "base": "https://api.minimax.io/v1", "model": "MiniMax-M2.7"},
+                    "gemini": {"key": os.getenv("GEMINI_API_KEY"), "base": "https://generativelanguage.googleapis.com/v1beta/openai", "model": "gemini-2.0-flash-preview"},
+                    "copilot": {"key": os.getenv("GITHUB_COPILOT_TOKEN"), "base": "https://api.githubcopilot.com", "model": "gpt-4o"},
+                    "ollama": {"key": "ollama", "base": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"), "model": os.getenv("OLLAMA_MODEL", "minimax-m2.7:cloud")},
                 }
                 cfg = configs.get(self.provider, configs["openai"])
                 client = AsyncOpenAI(api_key=cfg["key"], base_url=cfg.get("base"))
