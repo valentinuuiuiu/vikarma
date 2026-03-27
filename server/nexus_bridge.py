@@ -1,11 +1,11 @@
 """
-NEXUS BRIDGE — Rehoboam ↔ 64 Bhairava Temples
+NEXUS BRIDGE — Rehoboam ↔ 66 Bhairava Temples
 Connects trading platform to all MCP servers for abundance
 
 Architecture:
   Rehoboam (Trading AI)
       ↕ NexusBridge
-  64 Bhairava Temples (MCP Servers)
+  66 Bhairava Temples (MCP Servers)
       ├── Temple 45: Binance (crypto prices)
       ├── Temple 46: CoinGecko (market data)
       ├── Temple 27: Anthropic Claude (AI analysis)
@@ -24,6 +24,9 @@ import time
 from typing import Optional, Any
 from pathlib import Path
 import httpx
+
+from server.integrations.chainlink_client import get_chainlink_client
+from server.integrations.alchemy_client import get_alchemy_client
 
 
 # ── Temple endpoints (MCP servers) ────────────────────────────────────────────
@@ -106,6 +109,10 @@ TEMPLE_PORTS = {
     "calculator":      9082,  # Temple 62 — Precise math, financial calcs
     "translator":      9083,  # Temple 63 — Multi-language translation
     "vikarma_core":    9084,  # Temple 64 — Self-reference, meta-cognition
+
+    # ── Blockchain Oracles & Infrastructure (9085–9086) ──────────────────
+    "chainlink":       9085,  # Temple 65 — Chainlink price oracle feeds
+    "alchemy":         9086,  # Temple 66 — Alchemy blockchain APIs
 }
 
 # Human-readable skill descriptions for the agent system prompt
@@ -180,6 +187,8 @@ TEMPLE_SKILL_DESCRIPTIONS = {
     "calculator":    "Precise arithmetic and financial calculations",
     "translator":    "Translate text across 100+ languages",
     "vikarma_core":  "Vikarma self-reference and meta-cognition",
+    "chainlink":     "Chainlink on-chain price oracles — BTC/ETH/SOL/LINK/forex/commodities",
+    "alchemy":       "Alchemy blockchain API — balances, tokens, NFTs, transfers, gas, simulation",
 }
 
 VIKARMA_BACKEND = "http://127.0.0.1:8765"
@@ -304,6 +313,65 @@ class NexusBridge:
             result = await self._vikarma_tool("web_search", {"query": f"{query} news"})
             return {"temple": temple, "action": action, "result": result, "note": fallback_note}
 
+        # Chainlink — on-chain oracle price feeds
+        if temple == "chainlink":
+            client = get_chainlink_client()
+            if action in ("price", "get_price", "feed"):
+                pair = params.get("pair", params.get("symbol", action))
+                result = await client.get_price(pair)
+            elif action in ("list", "feeds", "list_feeds"):
+                result = client.list_feeds()
+            elif action == "multi":
+                pairs = params.get("pairs", ["BTC/USD", "ETH/USD"])
+                result = await client.get_multiple(pairs)
+            else:
+                # treat action as a pair name (e.g. "ETH/USD")
+                result = await client.get_price(action)
+            return {"temple": temple, "action": action, "result": result}
+
+        # Alchemy — blockchain data APIs
+        if temple == "alchemy":
+            client = get_alchemy_client()
+            network = params.get("network", "ethereum")
+            address = params.get("address", params.get("wallet", ""))
+
+            if action == "balance":
+                result = await client.get_balance(address, network)
+            elif action == "tokens":
+                result = await client.get_token_balances(address, network)
+            elif action == "nfts":
+                result = await client.get_nfts(address, network)
+            elif action in ("transfers", "history"):
+                direction = params.get("direction", "to")
+                result = await client.get_asset_transfers(address, direction, network)
+            elif action == "block":
+                result = await client.get_block_number(network)
+            elif action == "gas":
+                result = await client.get_gas_price(network)
+            elif action == "tx":
+                tx_hash = params.get("hash", params.get("tx_hash", action))
+                result = await client.get_transaction(tx_hash, network)
+            elif action == "receipt":
+                tx_hash = params.get("hash", params.get("tx_hash", ""))
+                result = await client.get_transaction_receipt(tx_hash, network)
+            elif action == "price":
+                symbols = params.get("symbols", [params.get("symbol", "ETH")])
+                if isinstance(symbols, str):
+                    symbols = [symbols]
+                result = await client.get_token_price(symbols)
+            elif action == "wallet":
+                result = await client.wallet_summary(address, network)
+            elif action == "is_contract":
+                result = await client.get_code(address, network)
+            elif action in ("networks", "list"):
+                result = client.supported_networks()
+            else:
+                result = {"error": f"Unknown Alchemy action: '{action}'",
+                          "available": ["balance", "tokens", "nfts", "transfers",
+                                        "block", "gas", "tx", "receipt", "price",
+                                        "wallet", "is_contract", "networks"]}
+            return {"temple": temple, "action": action, "result": result}
+
         return {
             "temple": temple,
             "port": port,
@@ -314,7 +382,7 @@ class NexusBridge:
         }
 
     def list_temples(self, category: str = None) -> list[dict]:
-        """List all 64 temples with their descriptions."""
+        """List all 66 temples with their descriptions."""
         categories = {
             "data":          list(range(9021, 9031)),
             "communication": list(range(9031, 9041)),
@@ -323,6 +391,7 @@ class NexusBridge:
             "knowledge":     list(range(9061, 9071)),
             "cloud":         list(range(9071, 9081)),
             "sacred":        list(range(9081, 9085)),
+            "blockchain":    list(range(9085, 9087)),
         }
         temples = []
         for name, port in TEMPLE_PORTS.items():
