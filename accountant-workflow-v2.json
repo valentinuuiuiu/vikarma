@@ -24,7 +24,7 @@
           "parameters": [
             {
               "name": "model",
-              "value": "llama3.2-vision"
+              "value": "gemini-3-pro-preview-cloud"
             },
             {
               "name": "prompt",
